@@ -1,0 +1,25 @@
+{
+  "name": "waves-crypto",
+  "version": "1.0.1",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "webpack --config webpack.config.js --env;",
+    "deploy": "cd dist; npm version patch; npm publish;"
+  },
+  "author": "Yuriy Naydenov",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/long": "^4.0.0",
+    "copy-webpack-plugin": "^4.5.2",
+    "ts-loader": "^5.1.0",
+    "typescript": "^3.0.3",
+    "webpack": "^4.17.2",
+    "webpack-cli": "^3.1.0",
+    "@types/node": "^10.9.4"
+  },
+  "dependencies": {
+    "crypto-js": "^3.1.9-1"
+  }
+}
