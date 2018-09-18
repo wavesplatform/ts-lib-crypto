@@ -176,6 +176,8 @@ export const one: Uint8Array = Uint8Array.from([1])
 
 export const BASE58_STRING: serializer<string> = (value: string) => base58.decode(value)
 
+export const BASE64_STRING: serializer<string> = (value: string) => Uint8Array.from(Buffer.from(value, 'base64'))
+
 export const STRING: serializer<string> = (value: string) => value ? stringToUint8Array(value) : empty
 
 export const BYTE: serializer<number> = (value: number) => Uint8Array.from([value])
