@@ -91,13 +91,16 @@ export const publicKey = (seed: string): string =>
 export const privateKey = (seed: string): string =>
   keyPair(seed).private
 
-export const address = (keyPairOrSeed: KeyPair | string, chainId: string = 'W') =>
+export const address = (keyPairOrSeed: KeyPair | string, chainId: string = 'W'): string =>
   typeof keyPairOrSeed === 'string' ?
     address(keyPair(keyPairOrSeed), chainId) :
     buildAddress(base58.decode(keyPairOrSeed.public), chainId)
 
-export const signBytes = (bytes: Uint8Array, seed: string) =>
+export const signBytes = (bytes: Uint8Array, seed: string): string =>
   buildTransactionSignature(bytes, privateKey(seed))
+
+export const verifySignature = (publicKey: string, bytes: Uint8Array, signature: string): boolean =>
+  axlsign.verify(BASE58_STRING(publicKey), bytes, BASE58_STRING(signature))
 
 export const hashBytes = (bytes: Uint8Array) => base58.encode(blake2b(bytes))
 
