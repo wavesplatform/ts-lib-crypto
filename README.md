@@ -37,7 +37,7 @@ wc.privateKey('seed') //4mmuDf2GQJ6vJrKzVzyKUyGBwv6AfpC5TKpaF3MfEE5w
 
 ```
 
-### Serialization and Signatures
+### Serialization and bytes signature
 
 ```js
 const wc = require('waves-crypto')
@@ -71,5 +71,20 @@ const bytes = wc.concat(
 )
 
 wc.signBytes(bytes, 'seed') // 5FSwfLir7YRavgRjdzs9Hg2KEv2Pu8szmXMgNbkt6BAm9fAJGURzDp6PiN1QhRfXBUYU1xJghzqijFebFA9yFXyp
+
+```
+
+### Verifying signatures
+
+```js
+const wc = require('waves-crypto')
+const { verifySignature, signBytes, publicKey } = wc
+
+const seed = 'magicseed'
+const pubKey = publicKey(seed)
+
+const bytes = Uint8Array.from([1, 2, 3, 4])
+const sig = signBytes(bytes, seed)
+const isValid = verifySignature(pubKey, bytes, sig) //true
 
 ```
