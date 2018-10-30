@@ -138,7 +138,7 @@ function nodeRandom(count, options) {
 
 function browserRandom(count, options) {
   const nativeArr = new Uint8Array(count)
-  const crypto = self.crypto || (self as any).msCrypto
+  const crypto = (global as any).crypto || (global as any).msCrypto
   crypto.getRandomValues(nativeArr)
 
   switch (options.type) {
@@ -161,7 +161,7 @@ function browserRandom(count, options) {
 function secureRandom(count, options) {
   options = options || { type: 'Array' }
 
-  if ((self.crypto || (self as any).msCrypto) != undefined) {
+  if (((global as any).crypto || (global as any).msCrypto) != undefined) {
     return browserRandom(count, options)
   } else if (typeof exports === 'object' && typeof module !== 'undefined') {
     return nodeRandom(count, options)
