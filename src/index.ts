@@ -58,17 +58,23 @@ function wordArrayToByteArrayEx(wordArray) {
 const stringToUint8Array = (str: string) =>
   Uint8Array.from([...unescape(encodeURIComponent(str))].map(c => c.charCodeAt(0)))
 
-function blake2b(input) {
+export function blake2b(input: Uint8Array) {
   return blake.blake2b(input, null, 32)
 }
 
-function keccak(input) {
+export function keccak(input: Uint8Array) {
   return (keccak256 as any).array(input)
 }
 
 function hashChain(input: Uint8Array): Uint8Array {
   return Uint8Array.from(keccak(blake2b(input)))
 }
+
+export const base58encode = (input: Uint8Array): string =>
+  base58.encode(input)
+
+export const base58decode = (input: string): Uint8Array =>
+  base58.decode(input)
 
 export interface KeyPair {
   public: string
