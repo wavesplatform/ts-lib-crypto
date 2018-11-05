@@ -20,14 +20,10 @@ module.exports = (args) => ({
   entry: ['./src/index.ts'],
   target: 'node',
   output: {
-    library: 'waves-items',
+    library: 'waves-crypto',
     libraryTarget: 'commonjs2',
     filename: 'index.js',
     path: path.resolve(__dirname, 'dist')
-  },
-  optimization: {
-    minimize: false,
-
   },
   module: {
     rules: [

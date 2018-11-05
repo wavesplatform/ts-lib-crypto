@@ -36,12 +36,6 @@ function byteArrayToWordArrayEx(arr: Uint8Array) {
   return CryptoJS.lib.WordArray.create(words)
 }
 
-function sha256(input: Uint8Array): Uint8Array {
-  const wordArray = byteArrayToWordArrayEx(input)
-  const resultWordArray = CryptoJS.SHA256(wordArray)
-  return wordArrayToByteArrayEx(resultWordArray)
-}
-
 function wordArrayToByteArrayEx(wordArray) {
   let words = wordArray.words
   let sigBytes = wordArray.sigBytes
@@ -58,12 +52,18 @@ function wordArrayToByteArrayEx(wordArray) {
 const stringToUint8Array = (str: string) =>
   Uint8Array.from([...unescape(encodeURIComponent(str))].map(c => c.charCodeAt(0)))
 
-export function blake2b(input: Uint8Array) {
+export function blake2b(input: Uint8Array): Uint8Array {
   return blake.blake2b(input, null, 32)
 }
 
-export function keccak(input: Uint8Array) {
+export function keccak(input: Uint8Array): Uint8Array {
   return (keccak256 as any).array(input)
+}
+
+export function sha256(input: Uint8Array): Uint8Array {
+  const wordArray = byteArrayToWordArrayEx(input)
+  const resultWordArray = CryptoJS.SHA256(wordArray)
+  return wordArrayToByteArrayEx(resultWordArray)
 }
 
 function hashChain(input: Uint8Array): Uint8Array {
@@ -76,10 +76,15 @@ export const base58encode = (input: Uint8Array): string =>
 export const base58decode = (input: string): Uint8Array =>
   base58.decode(input)
 
-export interface KeyPair {
+export interface PublicKey {
   public: string
+}
+
+export interface PrivateKey {
   private: string
 }
+
+export type KeyPair = PublicKey & PrivateKey
 
 export const keyPair = (seed: string): KeyPair => {
   const seedBytes = stringToUint8Array(seed)
@@ -97,10 +102,10 @@ export const publicKey = (seed: string): string =>
 export const privateKey = (seed: string): string =>
   keyPair(seed).private
 
-export const address = (keyPairOrSeed: KeyPair | string, chainId: string = 'W'): string =>
-  typeof keyPairOrSeed === 'string' ?
-    address(keyPair(keyPairOrSeed), chainId) :
-    buildAddress(base58.decode(keyPairOrSeed.public), chainId)
+export const address = (keyOrSeed: KeyPair | PublicKey | string, chainId: string = 'W'): string =>
+  typeof keyOrSeed === 'string' ?
+    address(keyPair(keyOrSeed), chainId) :
+    buildAddress(base58.decode(keyOrSeed.public), chainId)
 
 export const signBytes = (bytes: Uint8Array, seed: string): string =>
   buildTransactionSignature(bytes, privateKey(seed))
