@@ -6,9 +6,11 @@ Small and dependency-free.
 
 ### Includes:
 - Address generation
+- Address validation 
 - Key pair generation
-- Transaction serialization
-- Data signature
+- Bytes signature
+- Signature validation
+- Serialization primitives
 
 ### Keys and Addresses
 
@@ -36,8 +38,34 @@ wc.publicKey('seed') //HzSnoJKTVwezUBmo2gh9HYq52F1maKBsvv1ZWrZAHyHV
 wc.privateKey('seed') //4mmuDf2GQJ6vJrKzVzyKUyGBwv6AfpC5TKpaF3MfEE5w
 
 ```
+### Address validation
 
-### Serialization and bytes signature
+```js
+const { validateAddress } = require('waves-crypto')
+
+const validationErrors = validateAddress('3P2GVAniTmceyS7LE8HtQg1GEhyoghUZSvn') 
+// ['Address checksum is invalid.']
+
+isValid(validationErrors) //false
+
+```
+
+### Signatures and verification
+
+```js
+const wc = require('waves-crypto')
+const { verifySignature, signBytes, publicKey } = wc
+
+const seed = 'magicseed'
+const pubKey = publicKey(seed)
+
+const bytes = Uint8Array.from([1, 2, 3, 4])
+const sig = signBytes(bytes, seed)
+const isValid = verifySignature(pubKey, bytes, sig) //true
+
+```
+
+### Serialization primitives
 
 ```js
 const wc = require('waves-crypto')
@@ -58,7 +86,7 @@ const tx = {
 }
 
 const bytes = wc.concat(
-  BYTE(4),
+  BYTE(tx.type),
   BYTE(tx.version),
   BASE58_STRING(tx.senderPublicKey),
   OPTION(BASE58_STRING)(tx.assetId),
@@ -74,17 +102,3 @@ wc.signBytes(bytes, 'seed') // 5FSwfLir7YRavgRjdzs9Hg2KEv2Pu8szmXMgNbkt6BAm9fAJG
 
 ```
 
-### Verifying signatures
-
-```js
-const wc = require('waves-crypto')
-const { verifySignature, signBytes, publicKey } = wc
-
-const seed = 'magicseed'
-const pubKey = publicKey(seed)
-
-const bytes = Uint8Array.from([1, 2, 3, 4])
-const sig = signBytes(bytes, seed)
-const isValid = verifySignature(pubKey, bytes, sig) //true
-
-```
