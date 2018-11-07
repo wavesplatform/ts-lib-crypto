@@ -38,9 +38,7 @@ module.exports = (args) => ({
     extensions: ['.ts', '.js']
   },
   plugins: [
-    new copy([
-      { from: 'README.md' }
-    ]),
+    new copy([{ from: 'README.md' }]),
     {
       apply: (compiler) =>
         compiler.plugin('done', function () {

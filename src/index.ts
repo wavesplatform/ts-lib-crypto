@@ -9,6 +9,7 @@ import * as blake from './libs/blake2b'
 import { keccak256 } from './libs/sha3'
 import base58 from './libs/base58'
 import axlsign from './libs/axlsign'
+import { ValidationResult, noError, mergeValidationResults, isValid } from './validation';
 
 declare function unescape(s: string): string
 
@@ -51,6 +52,16 @@ function wordArrayToByteArrayEx(wordArray) {
 
 const stringToUint8Array = (str: string) =>
   Uint8Array.from([...unescape(encodeURIComponent(str))].map(c => c.charCodeAt(0)))
+
+export type PUBLIC_KEY_TYPES = string | PublicKey | Uint8Array
+
+export const publicKeyToString = (pk: PUBLIC_KEY_TYPES) =>
+  typeof pk === 'string' ? pk : (pk['public'] ? pk['public'] : base58encode(pk as Uint8Array))
+
+export const ADDRESS_LENGTH = 26
+export const PUBLIC_KEY_LENGTH = 32
+export const PRIVATE_KEY_LENGTH = 32
+export const SIGNATURE_LENGTH = 64
 
 export function blake2b(input: Uint8Array): Uint8Array {
   return blake.blake2b(input, null, 32)
@@ -110,8 +121,50 @@ export const address = (keyOrSeed: KeyPair | PublicKey | string, chainId: string
 export const signBytes = (bytes: Uint8Array, seed: string): string =>
   buildTransactionSignature(bytes, privateKey(seed))
 
-export const verifySignature = (publicKey: string, bytes: Uint8Array, signature: string): boolean =>
-  axlsign.verify(BASE58_STRING(publicKey), bytes, BASE58_STRING(signature))
+export const verifySignature = (publicKey: string, bytes: Uint8Array, signature: string): boolean => {
+  const signatureBytes = BASE58_STRING(signature)
+  return (
+    signatureBytes.length == SIGNATURE_LENGTH &&
+    axlsign.verify(BASE58_STRING(publicKey), bytes, signatureBytes)
+  )
+}
+
+export function arraysEqual(a: any[] | Uint8Array, b: any[] | Uint8Array): boolean {
+  if (a === b) return true
+  if (a == null || b == null) return false
+  if (a.length != b.length) return false
+
+  for (var i = 0; i < a.length; ++i)
+    if (a[i] !== b[i]) return false
+  return true
+}
+
+export const validateAddress = (addr: string, chainId: string = 'W', publicKey?: string | PublicKey): ValidationResult => {
+  const prefix = [1, chainId.charCodeAt(0)]
+  const addressBytes = base58decode(addr)
+
+  if (publicKey && publicKeyToString(publicKey))
+    return mergeValidationResults(address(publicKey, chainId) !== addr ? 'Invalid addres for publicKey and chainId.' : noError)
+
+  if (addressBytes.length != ADDRESS_LENGTH)
+    return [`Address length is ${addressBytes.length} but should be ${ADDRESS_LENGTH}.`]
+
+  const versionAndChainId = mergeValidationResults(
+    addressBytes[0] == prefix[0] ? noError : `Address version is ${addressBytes[0]} but ${prefix[0]} is only supported.`,
+    addressBytes[1] == prefix[1] ? noError : `Address chainId is ${String.fromCharCode(addressBytes[1])} but ${String.fromCharCode(prefix[1])} is expected.`)
+
+  if (!isValid(versionAndChainId))
+    return versionAndChainId
+
+  return mergeValidationResults(arraysEqual(hashChain(addressBytes.slice(0, 22)).slice(0, 4), addressBytes.slice(22, 26)) ? noError : 'Address checksum is invalid.')
+}
+
+export const validatePublicKey = (publicKey: PUBLIC_KEY_TYPES): ValidationResult => {
+  const pkBytes = base58decode(publicKeyToString(publicKey))
+  return mergeValidationResults(
+    pkBytes.length == PUBLIC_KEY_LENGTH ? noError : `Public key length is ${pkBytes.length} but should be ${PUBLIC_KEY_LENGTH}.`
+  )
+}
 
 export const hashBytes = (bytes: Uint8Array) => base58.encode(blake2b(bytes))
 
@@ -175,8 +228,8 @@ function secureRandom(count, options) {
   }
 }
 
-function randomUint8Array(byteCount) {
-  return secureRandom(byteCount, { type: 'Uint8Array' })
+export function randomUint8Array(length: number): Uint8Array {
+  return secureRandom(length, { type: 'Uint8Array' })
 }
 
 export type serializer<T> = (value: T) => Uint8Array

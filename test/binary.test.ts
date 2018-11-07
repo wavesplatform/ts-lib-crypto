@@ -55,8 +55,3 @@ test('BASE58_STRING', () => {
 test('BASE64_STRING', () => {
   expect(BASE64_STRING(base64)).toEqual(Uint8Array.from(bytes))
 })
-
-
-
-
-
