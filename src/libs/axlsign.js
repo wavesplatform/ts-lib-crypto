@@ -1,156 +1,120 @@
+"use strict";
 // Curve25519 signatures (and also key agreement)
 // like in the early Axolotl.
 //
 // Written by Dmitry Chestnykh.
 // You can use it under MIT or CC0 license.
-
+exports.__esModule = true;
 // Curve25519 signatures idea and math by Trevor Perrin
 // https://moderncrypto.org/mail-archive/curves/2014/000205.html
-
 // Derived from TweetNaCl.js (https://tweetnacl.js.org/)
 // Ported in 2014 by Dmitry Chestnykh and Devi Mandiri.
 // Public domain.
 //
 // Implementation derived from TweetNaCl version 20140427.
 // See for details: http://tweetnacl.cr.yp.to/
-
-const axlsign = Object.create(null);
-
-const gf = function(init?: any) {
-    let i, r = new Float64Array(16);
-    if (init) for (i = 0; i < init.length; i++) r[i] = init[i];
+var axlsign = Object.create(null);
+var gf = function (init) {
+    var i, r = new Float64Array(16);
+    if (init)
+        for (i = 0; i < init.length; i++)
+            r[i] = init[i];
     return r;
 };
-
-const _0 = new Uint8Array(16);
-const _9 = new Uint8Array(32); _9[0] = 9;
-
-const gf0 = gf(),
-    gf1 = gf([1]),
-    _121665 = gf([0xdb41, 1]),
-    D = gf([0x78a3, 0x1359, 0x4dca, 0x75eb, 0xd8ab, 0x4141, 0x0a4d, 0x0070, 0xe898, 0x7779, 0x4079, 0x8cc7, 0xfe73, 0x2b6f, 0x6cee, 0x5203]),
-    D2 = gf([0xf159, 0x26b2, 0x9b94, 0xebd6, 0xb156, 0x8283, 0x149a, 0x00e0, 0xd130, 0xeef3, 0x80f2, 0x198e, 0xfce7, 0x56df, 0xd9dc, 0x2406]),
-    X = gf([0xd51a, 0x8f25, 0x2d60, 0xc956, 0xa7b2, 0x9525, 0xc760, 0x692c, 0xdc5c, 0xfdd6, 0xe231, 0xc0a4, 0x53fe, 0xcd6e, 0x36d3, 0x2169]),
-    Y = gf([0x6658, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666]),
-    I = gf([0xa0b0, 0x4a0e, 0x1b27, 0xc4ee, 0xe478, 0xad2f, 0x1806, 0x2f43, 0xd7a7, 0x3dfb, 0x0099, 0x2b4d, 0xdf0b, 0x4fc1, 0x2480, 0x2b83]);
-
+var _0 = new Uint8Array(16);
+var _9 = new Uint8Array(32);
+_9[0] = 9;
+var gf0 = gf(), gf1 = gf([1]), _121665 = gf([0xdb41, 1]), D = gf([0x78a3, 0x1359, 0x4dca, 0x75eb, 0xd8ab, 0x4141, 0x0a4d, 0x0070, 0xe898, 0x7779, 0x4079, 0x8cc7, 0xfe73, 0x2b6f, 0x6cee, 0x5203]), D2 = gf([0xf159, 0x26b2, 0x9b94, 0xebd6, 0xb156, 0x8283, 0x149a, 0x00e0, 0xd130, 0xeef3, 0x80f2, 0x198e, 0xfce7, 0x56df, 0xd9dc, 0x2406]), X = gf([0xd51a, 0x8f25, 0x2d60, 0xc956, 0xa7b2, 0x9525, 0xc760, 0x692c, 0xdc5c, 0xfdd6, 0xe231, 0xc0a4, 0x53fe, 0xcd6e, 0x36d3, 0x2169]), Y = gf([0x6658, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666, 0x6666]), I = gf([0xa0b0, 0x4a0e, 0x1b27, 0xc4ee, 0xe478, 0xad2f, 0x1806, 0x2f43, 0xd7a7, 0x3dfb, 0x0099, 0x2b4d, 0xdf0b, 0x4fc1, 0x2480, 0x2b83]);
 function ts64(x, i, h, l) {
-    x[i]   = (h >> 24) & 0xff;
-    x[i+1] = (h >> 16) & 0xff;
-    x[i+2] = (h >>  8) & 0xff;
-    x[i+3] = h & 0xff;
-    x[i+4] = (l >> 24)  & 0xff;
-    x[i+5] = (l >> 16)  & 0xff;
-    x[i+6] = (l >>  8)  & 0xff;
-    x[i+7] = l & 0xff;
+    x[i] = (h >> 24) & 0xff;
+    x[i + 1] = (h >> 16) & 0xff;
+    x[i + 2] = (h >> 8) & 0xff;
+    x[i + 3] = h & 0xff;
+    x[i + 4] = (l >> 24) & 0xff;
+    x[i + 5] = (l >> 16) & 0xff;
+    x[i + 6] = (l >> 8) & 0xff;
+    x[i + 7] = l & 0xff;
 }
-
 function vn(x, xi, y, yi, n) {
-    let i, d = 0;
-    for (i = 0; i < n; i++) d |= x[xi+i]^y[yi+i];
+    var i, d = 0;
+    for (i = 0; i < n; i++)
+        d |= x[xi + i] ^ y[yi + i];
     return (1 & ((d - 1) >>> 8)) - 1;
 }
-
 function crypto_verify_32(x, xi, y, yi) {
-    return vn(x,xi,y,yi,32);
+    return vn(x, xi, y, yi, 32);
 }
-
 function set25519(r, a) {
-    for (let i = 0; i < 16; i++) r[i] = a[i]|0;
+    for (var i = 0; i < 16; i++)
+        r[i] = a[i] | 0;
 }
-
 function car25519(o) {
-    let i, v, c = 1;
+    var i, v, c = 1;
     for (i = 0; i < 16; i++) {
         v = o[i] + c + 65535;
         c = Math.floor(v / 65536);
         o[i] = v - c * 65536;
     }
-    o[0] += c-1 + 37 * (c-1);
+    o[0] += c - 1 + 37 * (c - 1);
 }
-
 function sel25519(p, q, b) {
-    let t, c = ~(b-1);
-    for (let i = 0; i < 16; i++) {
+    var t, c = ~(b - 1);
+    for (var i = 0; i < 16; i++) {
         t = c & (p[i] ^ q[i]);
         p[i] ^= t;
         q[i] ^= t;
     }
 }
-
 function pack25519(o, n) {
-    let i, j, b;
-    const m = gf(), t = gf();
-    for (i = 0; i < 16; i++) t[i] = n[i];
+    var i, j, b;
+    var m = gf(), t = gf();
+    for (i = 0; i < 16; i++)
+        t[i] = n[i];
     car25519(t);
     car25519(t);
     car25519(t);
     for (j = 0; j < 2; j++) {
         m[0] = t[0] - 0xffed;
         for (i = 1; i < 15; i++) {
-            m[i] = t[i] - 0xffff - ((m[i-1]>>16) & 1);
-            m[i-1] &= 0xffff;
+            m[i] = t[i] - 0xffff - ((m[i - 1] >> 16) & 1);
+            m[i - 1] &= 0xffff;
         }
-        m[15] = t[15] - 0x7fff - ((m[14]>>16) & 1);
-        b = (m[15]>>16) & 1;
+        m[15] = t[15] - 0x7fff - ((m[14] >> 16) & 1);
+        b = (m[15] >> 16) & 1;
         m[14] &= 0xffff;
-        sel25519(t, m, 1-b);
+        sel25519(t, m, 1 - b);
     }
     for (i = 0; i < 16; i++) {
-        o[2*i] = t[i] & 0xff;
-        o[2*i+1] = t[i]>>8;
+        o[2 * i] = t[i] & 0xff;
+        o[2 * i + 1] = t[i] >> 8;
     }
 }
-
 function neq25519(a, b) {
-    const c = new Uint8Array(32), d = new Uint8Array(32);
+    var c = new Uint8Array(32), d = new Uint8Array(32);
     pack25519(c, a);
     pack25519(d, b);
     return crypto_verify_32(c, 0, d, 0);
 }
-
 function par25519(a) {
-    const d = new Uint8Array(32);
+    var d = new Uint8Array(32);
     pack25519(d, a);
     return d[0] & 1;
 }
-
 function unpack25519(o, n) {
-    for (let i = 0; i < 16; i++) o[i] = n[2*i] + (n[2*i+1] << 8);
+    for (var i = 0; i < 16; i++)
+        o[i] = n[2 * i] + (n[2 * i + 1] << 8);
     o[15] &= 0x7fff;
 }
-
 function A(o, a, b) {
-    for (let i = 0; i < 16; i++) o[i] = a[i] + b[i];
+    for (var i = 0; i < 16; i++)
+        o[i] = a[i] + b[i];
 }
-
 function Z(o, a, b) {
-    for (let i = 0; i < 16; i++) o[i] = a[i] - b[i];
+    for (var i = 0; i < 16; i++)
+        o[i] = a[i] - b[i];
 }
-
 function M(o, a, b) {
-    let v, c,
-        t0 = 0,  t1 = 0,  t2 = 0,  t3 = 0,  t4 = 0,  t5 = 0,  t6 = 0,  t7 = 0,
-        t8 = 0,  t9 = 0, t10 = 0, t11 = 0, t12 = 0, t13 = 0, t14 = 0, t15 = 0,
-        t16 = 0, t17 = 0, t18 = 0, t19 = 0, t20 = 0, t21 = 0, t22 = 0, t23 = 0,
-        t24 = 0, t25 = 0, t26 = 0, t27 = 0, t28 = 0, t29 = 0, t30 = 0,
-        b0 = b[0],
-        b1 = b[1],
-        b2 = b[2],
-        b3 = b[3],
-        b4 = b[4],
-        b5 = b[5],
-        b6 = b[6],
-        b7 = b[7],
-        b8 = b[8],
-        b9 = b[9],
-        b10 = b[10],
-        b11 = b[11],
-        b12 = b[12],
-        b13 = b[13],
-        b14 = b[14],
-        b15 = b[15];
-
+    var v, c, t0 = 0, t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0, t6 = 0, t7 = 0, t8 = 0, t9 = 0, t10 = 0, t11 = 0, t12 = 0, t13 = 0, t14 = 0, t15 = 0, t16 = 0, t17 = 0, t18 = 0, t19 = 0, t20 = 0, t21 = 0, t22 = 0, t23 = 0, t24 = 0, t25 = 0, t26 = 0, t27 = 0, t28 = 0, t29 = 0, t30 = 0, b0 = b[0], b1 = b[1], b2 = b[2], b3 = b[3], b4 = b[4], b5 = b[5], b6 = b[6], b7 = b[7], b8 = b[8], b9 = b[9], b10 = b[10], b11 = b[11], b12 = b[12], b13 = b[13], b14 = b[14], b15 = b[15];
     v = a[0];
     t0 += v * b0;
     t1 += v * b1;
@@ -423,74 +387,134 @@ function M(o, a, b) {
     t28 += v * b13;
     t29 += v * b14;
     t30 += v * b15;
-
-    t0  += 38 * t16;
-    t1  += 38 * t17;
-    t2  += 38 * t18;
-    t3  += 38 * t19;
-    t4  += 38 * t20;
-    t5  += 38 * t21;
-    t6  += 38 * t22;
-    t7  += 38 * t23;
-    t8  += 38 * t24;
-    t9  += 38 * t25;
+    t0 += 38 * t16;
+    t1 += 38 * t17;
+    t2 += 38 * t18;
+    t3 += 38 * t19;
+    t4 += 38 * t20;
+    t5 += 38 * t21;
+    t6 += 38 * t22;
+    t7 += 38 * t23;
+    t8 += 38 * t24;
+    t9 += 38 * t25;
     t10 += 38 * t26;
     t11 += 38 * t27;
     t12 += 38 * t28;
     t13 += 38 * t29;
     t14 += 38 * t30;
     // t15 left as is
-
     // first car
     c = 1;
-    v =  t0 + c + 65535; c = Math.floor(v / 65536);  t0 = v - c * 65536;
-    v =  t1 + c + 65535; c = Math.floor(v / 65536);  t1 = v - c * 65536;
-    v =  t2 + c + 65535; c = Math.floor(v / 65536);  t2 = v - c * 65536;
-    v =  t3 + c + 65535; c = Math.floor(v / 65536);  t3 = v - c * 65536;
-    v =  t4 + c + 65535; c = Math.floor(v / 65536);  t4 = v - c * 65536;
-    v =  t5 + c + 65535; c = Math.floor(v / 65536);  t5 = v - c * 65536;
-    v =  t6 + c + 65535; c = Math.floor(v / 65536);  t6 = v - c * 65536;
-    v =  t7 + c + 65535; c = Math.floor(v / 65536);  t7 = v - c * 65536;
-    v =  t8 + c + 65535; c = Math.floor(v / 65536);  t8 = v - c * 65536;
-    v =  t9 + c + 65535; c = Math.floor(v / 65536);  t9 = v - c * 65536;
-    v = t10 + c + 65535; c = Math.floor(v / 65536); t10 = v - c * 65536;
-    v = t11 + c + 65535; c = Math.floor(v / 65536); t11 = v - c * 65536;
-    v = t12 + c + 65535; c = Math.floor(v / 65536); t12 = v - c * 65536;
-    v = t13 + c + 65535; c = Math.floor(v / 65536); t13 = v - c * 65536;
-    v = t14 + c + 65535; c = Math.floor(v / 65536); t14 = v - c * 65536;
-    v = t15 + c + 65535; c = Math.floor(v / 65536); t15 = v - c * 65536;
-    t0 += c-1 + 37 * (c-1);
-
+    v = t0 + c + 65535;
+    c = Math.floor(v / 65536);
+    t0 = v - c * 65536;
+    v = t1 + c + 65535;
+    c = Math.floor(v / 65536);
+    t1 = v - c * 65536;
+    v = t2 + c + 65535;
+    c = Math.floor(v / 65536);
+    t2 = v - c * 65536;
+    v = t3 + c + 65535;
+    c = Math.floor(v / 65536);
+    t3 = v - c * 65536;
+    v = t4 + c + 65535;
+    c = Math.floor(v / 65536);
+    t4 = v - c * 65536;
+    v = t5 + c + 65535;
+    c = Math.floor(v / 65536);
+    t5 = v - c * 65536;
+    v = t6 + c + 65535;
+    c = Math.floor(v / 65536);
+    t6 = v - c * 65536;
+    v = t7 + c + 65535;
+    c = Math.floor(v / 65536);
+    t7 = v - c * 65536;
+    v = t8 + c + 65535;
+    c = Math.floor(v / 65536);
+    t8 = v - c * 65536;
+    v = t9 + c + 65535;
+    c = Math.floor(v / 65536);
+    t9 = v - c * 65536;
+    v = t10 + c + 65535;
+    c = Math.floor(v / 65536);
+    t10 = v - c * 65536;
+    v = t11 + c + 65535;
+    c = Math.floor(v / 65536);
+    t11 = v - c * 65536;
+    v = t12 + c + 65535;
+    c = Math.floor(v / 65536);
+    t12 = v - c * 65536;
+    v = t13 + c + 65535;
+    c = Math.floor(v / 65536);
+    t13 = v - c * 65536;
+    v = t14 + c + 65535;
+    c = Math.floor(v / 65536);
+    t14 = v - c * 65536;
+    v = t15 + c + 65535;
+    c = Math.floor(v / 65536);
+    t15 = v - c * 65536;
+    t0 += c - 1 + 37 * (c - 1);
     // second car
     c = 1;
-    v =  t0 + c + 65535; c = Math.floor(v / 65536);  t0 = v - c * 65536;
-    v =  t1 + c + 65535; c = Math.floor(v / 65536);  t1 = v - c * 65536;
-    v =  t2 + c + 65535; c = Math.floor(v / 65536);  t2 = v - c * 65536;
-    v =  t3 + c + 65535; c = Math.floor(v / 65536);  t3 = v - c * 65536;
-    v =  t4 + c + 65535; c = Math.floor(v / 65536);  t4 = v - c * 65536;
-    v =  t5 + c + 65535; c = Math.floor(v / 65536);  t5 = v - c * 65536;
-    v =  t6 + c + 65535; c = Math.floor(v / 65536);  t6 = v - c * 65536;
-    v =  t7 + c + 65535; c = Math.floor(v / 65536);  t7 = v - c * 65536;
-    v =  t8 + c + 65535; c = Math.floor(v / 65536);  t8 = v - c * 65536;
-    v =  t9 + c + 65535; c = Math.floor(v / 65536);  t9 = v - c * 65536;
-    v = t10 + c + 65535; c = Math.floor(v / 65536); t10 = v - c * 65536;
-    v = t11 + c + 65535; c = Math.floor(v / 65536); t11 = v - c * 65536;
-    v = t12 + c + 65535; c = Math.floor(v / 65536); t12 = v - c * 65536;
-    v = t13 + c + 65535; c = Math.floor(v / 65536); t13 = v - c * 65536;
-    v = t14 + c + 65535; c = Math.floor(v / 65536); t14 = v - c * 65536;
-    v = t15 + c + 65535; c = Math.floor(v / 65536); t15 = v - c * 65536;
-    t0 += c-1 + 37 * (c-1);
-
-    o[ 0] = t0;
-    o[ 1] = t1;
-    o[ 2] = t2;
-    o[ 3] = t3;
-    o[ 4] = t4;
-    o[ 5] = t5;
-    o[ 6] = t6;
-    o[ 7] = t7;
-    o[ 8] = t8;
-    o[ 9] = t9;
+    v = t0 + c + 65535;
+    c = Math.floor(v / 65536);
+    t0 = v - c * 65536;
+    v = t1 + c + 65535;
+    c = Math.floor(v / 65536);
+    t1 = v - c * 65536;
+    v = t2 + c + 65535;
+    c = Math.floor(v / 65536);
+    t2 = v - c * 65536;
+    v = t3 + c + 65535;
+    c = Math.floor(v / 65536);
+    t3 = v - c * 65536;
+    v = t4 + c + 65535;
+    c = Math.floor(v / 65536);
+    t4 = v - c * 65536;
+    v = t5 + c + 65535;
+    c = Math.floor(v / 65536);
+    t5 = v - c * 65536;
+    v = t6 + c + 65535;
+    c = Math.floor(v / 65536);
+    t6 = v - c * 65536;
+    v = t7 + c + 65535;
+    c = Math.floor(v / 65536);
+    t7 = v - c * 65536;
+    v = t8 + c + 65535;
+    c = Math.floor(v / 65536);
+    t8 = v - c * 65536;
+    v = t9 + c + 65535;
+    c = Math.floor(v / 65536);
+    t9 = v - c * 65536;
+    v = t10 + c + 65535;
+    c = Math.floor(v / 65536);
+    t10 = v - c * 65536;
+    v = t11 + c + 65535;
+    c = Math.floor(v / 65536);
+    t11 = v - c * 65536;
+    v = t12 + c + 65535;
+    c = Math.floor(v / 65536);
+    t12 = v - c * 65536;
+    v = t13 + c + 65535;
+    c = Math.floor(v / 65536);
+    t13 = v - c * 65536;
+    v = t14 + c + 65535;
+    c = Math.floor(v / 65536);
+    t14 = v - c * 65536;
+    v = t15 + c + 65535;
+    c = Math.floor(v / 65536);
+    t15 = v - c * 65536;
+    t0 += c - 1 + 37 * (c - 1);
+    o[0] = t0;
+    o[1] = t1;
+    o[2] = t2;
+    o[3] = t3;
+    o[4] = t4;
+    o[5] = t5;
+    o[6] = t6;
+    o[7] = t7;
+    o[8] = t8;
+    o[9] = t9;
     o[10] = t10;
     o[11] = t11;
     o[12] = t12;
@@ -498,92 +522,92 @@ function M(o, a, b) {
     o[14] = t14;
     o[15] = t15;
 }
-
 function S(o, a) {
     M(o, a, a);
 }
-
 function inv25519(o, i) {
-    const c = gf();
-    let a;
-    for (a = 0; a < 16; a++) c[a] = i[a];
+    var c = gf();
+    var a;
+    for (a = 0; a < 16; a++)
+        c[a] = i[a];
     for (a = 253; a >= 0; a--) {
         S(c, c);
-        if(a !== 2 && a !== 4) M(c, c, i);
+        if (a !== 2 && a !== 4)
+            M(c, c, i);
     }
-    for (a = 0; a < 16; a++) o[a] = c[a];
+    for (a = 0; a < 16; a++)
+        o[a] = c[a];
 }
-
 function pow2523(o, i) {
-    const c = gf();
-    let a;
-    for (a = 0; a < 16; a++) c[a] = i[a];
+    var c = gf();
+    var a;
+    for (a = 0; a < 16; a++)
+        c[a] = i[a];
     for (a = 250; a >= 0; a--) {
         S(c, c);
-        if(a !== 1) M(c, c, i);
+        if (a !== 1)
+            M(c, c, i);
     }
-    for (a = 0; a < 16; a++) o[a] = c[a];
+    for (a = 0; a < 16; a++)
+        o[a] = c[a];
 }
-
 function crypto_scalarmult(q, n, p) {
-    const z = new Uint8Array(32);
-    const x = new Float64Array(80);
-    let r, i;
-    const a = gf(), b = gf(), c = gf(),
-        d = gf(), e = gf(), f = gf();
-    for (i = 0; i < 31; i++) z[i] = n[i];
-    z[31]=(n[31]&127)|64;
-    z[0]&=248;
-    unpack25519(x,p);
+    var z = new Uint8Array(32);
+    var x = new Float64Array(80);
+    var r, i;
+    var a = gf(), b = gf(), c = gf(), d = gf(), e = gf(), f = gf();
+    for (i = 0; i < 31; i++)
+        z[i] = n[i];
+    z[31] = (n[31] & 127) | 64;
+    z[0] &= 248;
+    unpack25519(x, p);
     for (i = 0; i < 16; i++) {
-        b[i]=x[i];
-        d[i]=a[i]=c[i]=0;
+        b[i] = x[i];
+        d[i] = a[i] = c[i] = 0;
     }
-    a[0]=d[0]=1;
-    for (i=254; i>=0; --i) {
-        r=(z[i>>>3]>>>(i&7))&1;
-        sel25519(a,b,r);
-        sel25519(c,d,r);
-        A(e,a,c);
-        Z(a,a,c);
-        A(c,b,d);
-        Z(b,b,d);
-        S(d,e);
-        S(f,a);
-        M(a,c,a);
-        M(c,b,e);
-        A(e,a,c);
-        Z(a,a,c);
-        S(b,a);
-        Z(c,d,f);
-        M(a,c,_121665);
-        A(a,a,d);
-        M(c,c,a);
-        M(a,d,f);
-        M(d,b,x);
-        S(b,e);
-        sel25519(a,b,r);
-        sel25519(c,d,r);
+    a[0] = d[0] = 1;
+    for (i = 254; i >= 0; --i) {
+        r = (z[i >>> 3] >>> (i & 7)) & 1;
+        sel25519(a, b, r);
+        sel25519(c, d, r);
+        A(e, a, c);
+        Z(a, a, c);
+        A(c, b, d);
+        Z(b, b, d);
+        S(d, e);
+        S(f, a);
+        M(a, c, a);
+        M(c, b, e);
+        A(e, a, c);
+        Z(a, a, c);
+        S(b, a);
+        Z(c, d, f);
+        M(a, c, _121665);
+        A(a, a, d);
+        M(c, c, a);
+        M(a, d, f);
+        M(d, b, x);
+        S(b, e);
+        sel25519(a, b, r);
+        sel25519(c, d, r);
     }
     for (i = 0; i < 16; i++) {
-        x[i+16]=a[i];
-        x[i+32]=c[i];
-        x[i+48]=b[i];
-        x[i+64]=d[i];
+        x[i + 16] = a[i];
+        x[i + 32] = c[i];
+        x[i + 48] = b[i];
+        x[i + 64] = d[i];
     }
-    const x32 = x.subarray(32);
-    const x16 = x.subarray(16);
-    inv25519(x32,x32);
-    M(x16,x16,x32);
-    pack25519(q,x16);
+    var x32 = x.subarray(32);
+    var x16 = x.subarray(16);
+    inv25519(x32, x32);
+    M(x16, x16, x32);
+    pack25519(q, x16);
     return 0;
 }
-
 function crypto_scalarmult_base(q, n) {
     return crypto_scalarmult(q, n, _9);
 }
-
-const K = [
+var K = [
     0x428a2f98, 0xd728ae22, 0x71374491, 0x23ef65cd,
     0xb5c0fbcf, 0xec4d3b2f, 0xe9b5dba5, 0x8189dbbc,
     0x3956c25b, 0xf348b538, 0x59f111f1, 0xb605d019,
@@ -625,37 +649,16 @@ const K = [
     0x4cc5d4be, 0xcb3e42b6, 0x597f299c, 0xfc657e2a,
     0x5fcb6fab, 0x3ad6faec, 0x6c44198c, 0x4a475817
 ];
-
 function crypto_hashblocks_hl(hh, hl, m, n) {
-    const wh = new Int32Array(16), wl = new Int32Array(16);
-    let bh0, bh1, bh2, bh3, bh4, bh5, bh6, bh7,
-        bl0, bl1, bl2, bl3, bl4, bl5, bl6, bl7,
-        th, tl, i, j, h, l, a, b, c, d;
-
-    let ah0 = hh[0],
-        ah1 = hh[1],
-        ah2 = hh[2],
-        ah3 = hh[3],
-        ah4 = hh[4],
-        ah5 = hh[5],
-        ah6 = hh[6],
-        ah7 = hh[7],
-
-        al0 = hl[0],
-        al1 = hl[1],
-        al2 = hl[2],
-        al3 = hl[3],
-        al4 = hl[4],
-        al5 = hl[5],
-        al6 = hl[6],
-        al7 = hl[7];
-
-    let pos = 0;
+    var wh = new Int32Array(16), wl = new Int32Array(16);
+    var bh0, bh1, bh2, bh3, bh4, bh5, bh6, bh7, bl0, bl1, bl2, bl3, bl4, bl5, bl6, bl7, th, tl, i, j, h, l, a, b, c, d;
+    var ah0 = hh[0], ah1 = hh[1], ah2 = hh[2], ah3 = hh[3], ah4 = hh[4], ah5 = hh[5], ah6 = hh[6], ah7 = hh[7], al0 = hl[0], al1 = hl[1], al2 = hl[2], al3 = hl[3], al4 = hl[4], al5 = hl[5], al6 = hl[6], al7 = hl[7];
+    var pos = 0;
     while (n >= 128) {
         for (i = 0; i < 16; i++) {
             j = 8 * i + pos;
-            wh[i] = (m[j+0] << 24) | (m[j+1] << 16) | (m[j+2] << 8) | m[j+3];
-            wl[i] = (m[j+4] << 24) | (m[j+5] << 16) | (m[j+6] << 8) | m[j+7];
+            wh[i] = (m[j + 0] << 24) | (m[j + 1] << 16) | (m[j + 2] << 8) | m[j + 3];
+            wl[i] = (m[j + 4] << 24) | (m[j + 5] << 16) | (m[j + 6] << 8) | m[j + 7];
         }
         for (i = 0; i < 80; i++) {
             bh0 = ah0;
@@ -666,7 +669,6 @@ function crypto_hashblocks_hl(hh, hl, m, n) {
             bh5 = ah5;
             bh6 = ah6;
             bh7 = ah7;
-
             bl0 = al0;
             bl1 = al1;
             bl2 = al2;
@@ -675,97 +677,90 @@ function crypto_hashblocks_hl(hh, hl, m, n) {
             bl5 = al5;
             bl6 = al6;
             bl7 = al7;
-
             // add
             h = ah7;
             l = al7;
-
-            a = l & 0xffff; b = l >>> 16;
-            c = h & 0xffff; d = h >>> 16;
-
+            a = l & 0xffff;
+            b = l >>> 16;
+            c = h & 0xffff;
+            d = h >>> 16;
             // Sigma1
-            h = ((ah4 >>> 14) | (al4 << (32-14))) ^ ((ah4 >>> 18) | (al4 << (32-18))) ^ ((al4 >>> (41-32)) | (ah4 << (32-(41-32))));
-            l = ((al4 >>> 14) | (ah4 << (32-14))) ^ ((al4 >>> 18) | (ah4 << (32-18))) ^ ((ah4 >>> (41-32)) | (al4 << (32-(41-32))));
-
-            a += l & 0xffff; b += l >>> 16;
-            c += h & 0xffff; d += h >>> 16;
-
+            h = ((ah4 >>> 14) | (al4 << (32 - 14))) ^ ((ah4 >>> 18) | (al4 << (32 - 18))) ^ ((al4 >>> (41 - 32)) | (ah4 << (32 - (41 - 32))));
+            l = ((al4 >>> 14) | (ah4 << (32 - 14))) ^ ((al4 >>> 18) | (ah4 << (32 - 18))) ^ ((ah4 >>> (41 - 32)) | (al4 << (32 - (41 - 32))));
+            a += l & 0xffff;
+            b += l >>> 16;
+            c += h & 0xffff;
+            d += h >>> 16;
             // Ch
             h = (ah4 & ah5) ^ (~ah4 & ah6);
             l = (al4 & al5) ^ (~al4 & al6);
-
-            a += l & 0xffff; b += l >>> 16;
-            c += h & 0xffff; d += h >>> 16;
-
+            a += l & 0xffff;
+            b += l >>> 16;
+            c += h & 0xffff;
+            d += h >>> 16;
             // K
-            h = K[i*2];
-            l = K[i*2+1];
-
-            a += l & 0xffff; b += l >>> 16;
-            c += h & 0xffff; d += h >>> 16;
-
+            h = K[i * 2];
+            l = K[i * 2 + 1];
+            a += l & 0xffff;
+            b += l >>> 16;
+            c += h & 0xffff;
+            d += h >>> 16;
             // w
-            h = wh[i%16];
-            l = wl[i%16];
-
-            a += l & 0xffff; b += l >>> 16;
-            c += h & 0xffff; d += h >>> 16;
-
+            h = wh[i % 16];
+            l = wl[i % 16];
+            a += l & 0xffff;
+            b += l >>> 16;
+            c += h & 0xffff;
+            d += h >>> 16;
             b += a >>> 16;
             c += b >>> 16;
             d += c >>> 16;
-
             th = c & 0xffff | d << 16;
             tl = a & 0xffff | b << 16;
-
             // add
             h = th;
             l = tl;
-
-            a = l & 0xffff; b = l >>> 16;
-            c = h & 0xffff; d = h >>> 16;
-
+            a = l & 0xffff;
+            b = l >>> 16;
+            c = h & 0xffff;
+            d = h >>> 16;
             // Sigma0
-            h = ((ah0 >>> 28) | (al0 << (32-28))) ^ ((al0 >>> (34-32)) | (ah0 << (32-(34-32)))) ^ ((al0 >>> (39-32)) | (ah0 << (32-(39-32))));
-            l = ((al0 >>> 28) | (ah0 << (32-28))) ^ ((ah0 >>> (34-32)) | (al0 << (32-(34-32)))) ^ ((ah0 >>> (39-32)) | (al0 << (32-(39-32))));
-
-            a += l & 0xffff; b += l >>> 16;
-            c += h & 0xffff; d += h >>> 16;
-
+            h = ((ah0 >>> 28) | (al0 << (32 - 28))) ^ ((al0 >>> (34 - 32)) | (ah0 << (32 - (34 - 32)))) ^ ((al0 >>> (39 - 32)) | (ah0 << (32 - (39 - 32))));
+            l = ((al0 >>> 28) | (ah0 << (32 - 28))) ^ ((ah0 >>> (34 - 32)) | (al0 << (32 - (34 - 32)))) ^ ((ah0 >>> (39 - 32)) | (al0 << (32 - (39 - 32))));
+            a += l & 0xffff;
+            b += l >>> 16;
+            c += h & 0xffff;
+            d += h >>> 16;
             // Maj
             h = (ah0 & ah1) ^ (ah0 & ah2) ^ (ah1 & ah2);
             l = (al0 & al1) ^ (al0 & al2) ^ (al1 & al2);
-
-            a += l & 0xffff; b += l >>> 16;
-            c += h & 0xffff; d += h >>> 16;
-
+            a += l & 0xffff;
+            b += l >>> 16;
+            c += h & 0xffff;
+            d += h >>> 16;
             b += a >>> 16;
             c += b >>> 16;
             d += c >>> 16;
-
             bh7 = (c & 0xffff) | (d << 16);
             bl7 = (a & 0xffff) | (b << 16);
-
             // add
             h = bh3;
             l = bl3;
-
-            a = l & 0xffff; b = l >>> 16;
-            c = h & 0xffff; d = h >>> 16;
-
+            a = l & 0xffff;
+            b = l >>> 16;
+            c = h & 0xffff;
+            d = h >>> 16;
             h = th;
             l = tl;
-
-            a += l & 0xffff; b += l >>> 16;
-            c += h & 0xffff; d += h >>> 16;
-
+            a += l & 0xffff;
+            b += l >>> 16;
+            c += h & 0xffff;
+            d += h >>> 16;
             b += a >>> 16;
             c += b >>> 16;
             d += c >>> 16;
-
             bh3 = (c & 0xffff) | (d << 16);
             bl3 = (a & 0xffff) | (b << 16);
-
             ah1 = bh0;
             ah2 = bh1;
             ah3 = bh2;
@@ -774,7 +769,6 @@ function crypto_hashblocks_hl(hh, hl, m, n) {
             ah6 = bh5;
             ah7 = bh6;
             ah0 = bh7;
-
             al1 = bl0;
             al2 = bl1;
             al3 = bl2;
@@ -783,216 +777,194 @@ function crypto_hashblocks_hl(hh, hl, m, n) {
             al6 = bl5;
             al7 = bl6;
             al0 = bl7;
-
-            if (i%16 === 15) {
+            if (i % 16 === 15) {
                 for (j = 0; j < 16; j++) {
                     // add
                     h = wh[j];
                     l = wl[j];
-
-                    a = l & 0xffff; b = l >>> 16;
-                    c = h & 0xffff; d = h >>> 16;
-
-                    h = wh[(j+9)%16];
-                    l = wl[(j+9)%16];
-
-                    a += l & 0xffff; b += l >>> 16;
-                    c += h & 0xffff; d += h >>> 16;
-
+                    a = l & 0xffff;
+                    b = l >>> 16;
+                    c = h & 0xffff;
+                    d = h >>> 16;
+                    h = wh[(j + 9) % 16];
+                    l = wl[(j + 9) % 16];
+                    a += l & 0xffff;
+                    b += l >>> 16;
+                    c += h & 0xffff;
+                    d += h >>> 16;
                     // sigma0
-                    th = wh[(j+1)%16];
-                    tl = wl[(j+1)%16];
-                    h = ((th >>> 1) | (tl << (32-1))) ^ ((th >>> 8) | (tl << (32-8))) ^ (th >>> 7);
-                    l = ((tl >>> 1) | (th << (32-1))) ^ ((tl >>> 8) | (th << (32-8))) ^ ((tl >>> 7) | (th << (32-7)));
-
-                    a += l & 0xffff; b += l >>> 16;
-                    c += h & 0xffff; d += h >>> 16;
-
+                    th = wh[(j + 1) % 16];
+                    tl = wl[(j + 1) % 16];
+                    h = ((th >>> 1) | (tl << (32 - 1))) ^ ((th >>> 8) | (tl << (32 - 8))) ^ (th >>> 7);
+                    l = ((tl >>> 1) | (th << (32 - 1))) ^ ((tl >>> 8) | (th << (32 - 8))) ^ ((tl >>> 7) | (th << (32 - 7)));
+                    a += l & 0xffff;
+                    b += l >>> 16;
+                    c += h & 0xffff;
+                    d += h >>> 16;
                     // sigma1
-                    th = wh[(j+14)%16];
-                    tl = wl[(j+14)%16];
-                    h = ((th >>> 19) | (tl << (32-19))) ^ ((tl >>> (61-32)) | (th << (32-(61-32)))) ^ (th >>> 6);
-                    l = ((tl >>> 19) | (th << (32-19))) ^ ((th >>> (61-32)) | (tl << (32-(61-32)))) ^ ((tl >>> 6) | (th << (32-6)));
-
-                    a += l & 0xffff; b += l >>> 16;
-                    c += h & 0xffff; d += h >>> 16;
-
+                    th = wh[(j + 14) % 16];
+                    tl = wl[(j + 14) % 16];
+                    h = ((th >>> 19) | (tl << (32 - 19))) ^ ((tl >>> (61 - 32)) | (th << (32 - (61 - 32)))) ^ (th >>> 6);
+                    l = ((tl >>> 19) | (th << (32 - 19))) ^ ((th >>> (61 - 32)) | (tl << (32 - (61 - 32)))) ^ ((tl >>> 6) | (th << (32 - 6)));
+                    a += l & 0xffff;
+                    b += l >>> 16;
+                    c += h & 0xffff;
+                    d += h >>> 16;
                     b += a >>> 16;
                     c += b >>> 16;
                     d += c >>> 16;
-
                     wh[j] = (c & 0xffff) | (d << 16);
                     wl[j] = (a & 0xffff) | (b << 16);
                 }
             }
         }
-
         // add
         h = ah0;
         l = al0;
-
-        a = l & 0xffff; b = l >>> 16;
-        c = h & 0xffff; d = h >>> 16;
-
+        a = l & 0xffff;
+        b = l >>> 16;
+        c = h & 0xffff;
+        d = h >>> 16;
         h = hh[0];
         l = hl[0];
-
-        a += l & 0xffff; b += l >>> 16;
-        c += h & 0xffff; d += h >>> 16;
-
+        a += l & 0xffff;
+        b += l >>> 16;
+        c += h & 0xffff;
+        d += h >>> 16;
         b += a >>> 16;
         c += b >>> 16;
         d += c >>> 16;
-
         hh[0] = ah0 = (c & 0xffff) | (d << 16);
         hl[0] = al0 = (a & 0xffff) | (b << 16);
-
         h = ah1;
         l = al1;
-
-        a = l & 0xffff; b = l >>> 16;
-        c = h & 0xffff; d = h >>> 16;
-
+        a = l & 0xffff;
+        b = l >>> 16;
+        c = h & 0xffff;
+        d = h >>> 16;
         h = hh[1];
         l = hl[1];
-
-        a += l & 0xffff; b += l >>> 16;
-        c += h & 0xffff; d += h >>> 16;
-
+        a += l & 0xffff;
+        b += l >>> 16;
+        c += h & 0xffff;
+        d += h >>> 16;
         b += a >>> 16;
         c += b >>> 16;
         d += c >>> 16;
-
         hh[1] = ah1 = (c & 0xffff) | (d << 16);
         hl[1] = al1 = (a & 0xffff) | (b << 16);
-
         h = ah2;
         l = al2;
-
-        a = l & 0xffff; b = l >>> 16;
-        c = h & 0xffff; d = h >>> 16;
-
+        a = l & 0xffff;
+        b = l >>> 16;
+        c = h & 0xffff;
+        d = h >>> 16;
         h = hh[2];
         l = hl[2];
-
-        a += l & 0xffff; b += l >>> 16;
-        c += h & 0xffff; d += h >>> 16;
-
+        a += l & 0xffff;
+        b += l >>> 16;
+        c += h & 0xffff;
+        d += h >>> 16;
         b += a >>> 16;
         c += b >>> 16;
         d += c >>> 16;
-
         hh[2] = ah2 = (c & 0xffff) | (d << 16);
         hl[2] = al2 = (a & 0xffff) | (b << 16);
-
         h = ah3;
         l = al3;
-
-        a = l & 0xffff; b = l >>> 16;
-        c = h & 0xffff; d = h >>> 16;
-
+        a = l & 0xffff;
+        b = l >>> 16;
+        c = h & 0xffff;
+        d = h >>> 16;
         h = hh[3];
         l = hl[3];
-
-        a += l & 0xffff; b += l >>> 16;
-        c += h & 0xffff; d += h >>> 16;
-
+        a += l & 0xffff;
+        b += l >>> 16;
+        c += h & 0xffff;
+        d += h >>> 16;
         b += a >>> 16;
         c += b >>> 16;
         d += c >>> 16;
-
         hh[3] = ah3 = (c & 0xffff) | (d << 16);
         hl[3] = al3 = (a & 0xffff) | (b << 16);
-
         h = ah4;
         l = al4;
-
-        a = l & 0xffff; b = l >>> 16;
-        c = h & 0xffff; d = h >>> 16;
-
+        a = l & 0xffff;
+        b = l >>> 16;
+        c = h & 0xffff;
+        d = h >>> 16;
         h = hh[4];
         l = hl[4];
-
-        a += l & 0xffff; b += l >>> 16;
-        c += h & 0xffff; d += h >>> 16;
-
+        a += l & 0xffff;
+        b += l >>> 16;
+        c += h & 0xffff;
+        d += h >>> 16;
         b += a >>> 16;
         c += b >>> 16;
         d += c >>> 16;
-
         hh[4] = ah4 = (c & 0xffff) | (d << 16);
         hl[4] = al4 = (a & 0xffff) | (b << 16);
-
         h = ah5;
         l = al5;
-
-        a = l & 0xffff; b = l >>> 16;
-        c = h & 0xffff; d = h >>> 16;
-
+        a = l & 0xffff;
+        b = l >>> 16;
+        c = h & 0xffff;
+        d = h >>> 16;
         h = hh[5];
         l = hl[5];
-
-        a += l & 0xffff; b += l >>> 16;
-        c += h & 0xffff; d += h >>> 16;
-
+        a += l & 0xffff;
+        b += l >>> 16;
+        c += h & 0xffff;
+        d += h >>> 16;
         b += a >>> 16;
         c += b >>> 16;
         d += c >>> 16;
-
         hh[5] = ah5 = (c & 0xffff) | (d << 16);
         hl[5] = al5 = (a & 0xffff) | (b << 16);
-
         h = ah6;
         l = al6;
-
-        a = l & 0xffff; b = l >>> 16;
-        c = h & 0xffff; d = h >>> 16;
-
+        a = l & 0xffff;
+        b = l >>> 16;
+        c = h & 0xffff;
+        d = h >>> 16;
         h = hh[6];
         l = hl[6];
-
-        a += l & 0xffff; b += l >>> 16;
-        c += h & 0xffff; d += h >>> 16;
-
+        a += l & 0xffff;
+        b += l >>> 16;
+        c += h & 0xffff;
+        d += h >>> 16;
         b += a >>> 16;
         c += b >>> 16;
         d += c >>> 16;
-
         hh[6] = ah6 = (c & 0xffff) | (d << 16);
         hl[6] = al6 = (a & 0xffff) | (b << 16);
-
         h = ah7;
         l = al7;
-
-        a = l & 0xffff; b = l >>> 16;
-        c = h & 0xffff; d = h >>> 16;
-
+        a = l & 0xffff;
+        b = l >>> 16;
+        c = h & 0xffff;
+        d = h >>> 16;
         h = hh[7];
         l = hl[7];
-
-        a += l & 0xffff; b += l >>> 16;
-        c += h & 0xffff; d += h >>> 16;
-
+        a += l & 0xffff;
+        b += l >>> 16;
+        c += h & 0xffff;
+        d += h >>> 16;
         b += a >>> 16;
         c += b >>> 16;
         d += c >>> 16;
-
         hh[7] = ah7 = (c & 0xffff) | (d << 16);
         hl[7] = al7 = (a & 0xffff) | (b << 16);
-
         pos += 128;
         n -= 128;
     }
-
     return n;
 }
-
 function crypto_hash(out, m, n) {
-    const hh = new Int32Array(8);
-    const hl = new Int32Array(8);
-    const x = new Uint8Array(256);
-    let i, b = n;
-
+    var hh = new Int32Array(8);
+    var hl = new Int32Array(8);
+    var x = new Uint8Array(256);
+    var i, b = n;
     hh[0] = 0x6a09e667;
     hh[1] = 0xbb67ae85;
     hh[2] = 0x3c6ef372;
@@ -1001,7 +973,6 @@ function crypto_hash(out, m, n) {
     hh[5] = 0x9b05688c;
     hh[6] = 0x1f83d9ab;
     hh[7] = 0x5be0cd19;
-
     hl[0] = 0xf3bcc908;
     hl[1] = 0x84caa73b;
     hl[2] = 0xfe94f82b;
@@ -1010,28 +981,21 @@ function crypto_hash(out, m, n) {
     hl[5] = 0x2b3e6c1f;
     hl[6] = 0xfb41bd6b;
     hl[7] = 0x137e2179;
-
     crypto_hashblocks_hl(hh, hl, m, n);
     n %= 128;
-
-    for (i = 0; i < n; i++) x[i] = m[b-n+i];
+    for (i = 0; i < n; i++)
+        x[i] = m[b - n + i];
     x[n] = 128;
-
-    n = 256-128*(n<112?1:0);
-    x[n-9] = 0;
-    ts64(x, n-8,  (b / 0x20000000) | 0, b << 3);
+    n = 256 - 128 * (n < 112 ? 1 : 0);
+    x[n - 9] = 0;
+    ts64(x, n - 8, (b / 0x20000000) | 0, b << 3);
     crypto_hashblocks_hl(hh, hl, x, n);
-
-    for (i = 0; i < 8; i++) ts64(out, 8*i, hh[i], hl[i]);
-
+    for (i = 0; i < 8; i++)
+        ts64(out, 8 * i, hh[i], hl[i]);
     return 0;
 }
-
 function add(p, q) {
-    const a = gf(), b = gf(), c = gf(),
-        d = gf(), e = gf(), f = gf(),
-        g = gf(), h = gf(), t = gf();
-
+    var a = gf(), b = gf(), c = gf(), d = gf(), e = gf(), f = gf(), g = gf(), h = gf(), t = gf();
     Z(a, p[1], p[0]);
     Z(t, q[1], q[0]);
     M(a, a, t);
@@ -1046,56 +1010,49 @@ function add(p, q) {
     Z(f, d, c);
     A(g, d, c);
     A(h, b, a);
-
     M(p[0], e, f);
     M(p[1], h, g);
     M(p[2], g, f);
     M(p[3], e, h);
 }
-
 function cswap(p, q, b) {
-    for (let i = 0; i < 4; i++) {
+    for (var i = 0; i < 4; i++) {
         sel25519(p[i], q[i], b);
     }
 }
-
 function pack(r, p) {
-    const tx = gf(), ty = gf(), zi = gf();
+    var tx = gf(), ty = gf(), zi = gf();
     inv25519(zi, p[2]);
     M(tx, p[0], zi);
     M(ty, p[1], zi);
     pack25519(r, ty);
     r[31] ^= par25519(tx) << 7;
 }
-
 function scalarmult(p, q, s) {
-    let b, i;
+    var b, i;
     set25519(p[0], gf0);
     set25519(p[1], gf1);
     set25519(p[2], gf1);
     set25519(p[3], gf0);
     for (i = 255; i >= 0; --i) {
-        b = (s[(i/8)|0] >> (i&7)) & 1;
+        b = (s[(i / 8) | 0] >> (i & 7)) & 1;
         cswap(p, q, b);
         add(q, p);
         add(p, p);
         cswap(p, q, b);
     }
 }
-
 function scalarbase(p, s) {
-    const q = [gf(), gf(), gf(), gf()];
+    var q = [gf(), gf(), gf(), gf()];
     set25519(q[0], X);
     set25519(q[1], Y);
     set25519(q[2], gf1);
     M(q[3], X, Y);
     scalarmult(p, q, s);
 }
-
-const L = new Float64Array([0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10]);
-
+var L = new Float64Array([0xed, 0xd3, 0xf5, 0x5c, 0x1a, 0x63, 0x12, 0x58, 0xd6, 0x9c, 0xf7, 0xa2, 0xde, 0xf9, 0xde, 0x14, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x10]);
 function modL(r, x) {
-    let carry, i, j, k;
+    var carry, i, j, k;
     for (i = 63; i >= 32; --i) {
         carry = 0;
         for (j = i - 32, k = i - 12; j < k; ++j) {
@@ -1112,326 +1069,306 @@ function modL(r, x) {
         carry = x[j] >> 8;
         x[j] &= 255;
     }
-    for (j = 0; j < 32; j++) x[j] -= carry * L[j];
+    for (j = 0; j < 32; j++)
+        x[j] -= carry * L[j];
     for (i = 0; i < 32; i++) {
-        x[i+1] += x[i] >> 8;
+        x[i + 1] += x[i] >> 8;
         r[i] = x[i] & 255;
     }
 }
-
 function reduce(r) {
-    const x = new Float64Array(64);
-    let i;
-    for (i = 0; i < 64; i++) x[i] = r[i];
-    for (i = 0; i < 64; i++) r[i] = 0;
+    var x = new Float64Array(64);
+    var i;
+    for (i = 0; i < 64; i++)
+        x[i] = r[i];
+    for (i = 0; i < 64; i++)
+        r[i] = 0;
     modL(r, x);
 }
-
 // Like crypto_sign, but uses secret key directly in hash.
 function crypto_sign_direct(sm, m, n, sk) {
-    const d = new Uint8Array(64), h = new Uint8Array(64), r = new Uint8Array(64);
-    const x = new Float64Array(64);
-    const p = [gf(), gf(), gf(), gf()];
-    let i, j;
-
-    for (i = 0; i < n; i++) sm[64 + i] = m[i];
-    for (i = 0; i < 32; i++) sm[32 + i] = sk[i];
-
-    crypto_hash(r, sm.subarray(32), n+32);
+    var d = new Uint8Array(64), h = new Uint8Array(64), r = new Uint8Array(64);
+    var x = new Float64Array(64);
+    var p = [gf(), gf(), gf(), gf()];
+    var i, j;
+    for (i = 0; i < n; i++)
+        sm[64 + i] = m[i];
+    for (i = 0; i < 32; i++)
+        sm[32 + i] = sk[i];
+    crypto_hash(r, sm.subarray(32), n + 32);
     reduce(r);
     scalarbase(p, r);
     pack(sm, p);
-
-    for (i = 0; i < 32; i++) sm[i + 32] = sk[32 + i];
+    for (i = 0; i < 32; i++)
+        sm[i + 32] = sk[32 + i];
     crypto_hash(h, sm, n + 64);
     reduce(h);
-
-    for (i = 0; i < 64; i++) x[i] = 0;
-    for (i = 0; i < 32; i++) x[i] = r[i];
+    for (i = 0; i < 64; i++)
+        x[i] = 0;
+    for (i = 0; i < 32; i++)
+        x[i] = r[i];
     for (i = 0; i < 32; i++) {
         for (j = 0; j < 32; j++) {
-            x[i+j] += h[i] * sk[j];
+            x[i + j] += h[i] * sk[j];
         }
     }
-
     modL(sm.subarray(32), x);
     return n + 64;
 }
-
 // Note: sm must be n+128.
 function crypto_sign_direct_rnd(sm, m, n, sk, rnd) {
-    const d = new Uint8Array(64), h = new Uint8Array(64), r = new Uint8Array(64);
-    const x = new Float64Array(64);
-    const p = [gf(), gf(), gf(), gf()];
-    let i, j;
-
+    var d = new Uint8Array(64), h = new Uint8Array(64), r = new Uint8Array(64);
+    var x = new Float64Array(64);
+    var p = [gf(), gf(), gf(), gf()];
+    var i, j;
     // Hash separation.
     sm[0] = 0xfe;
-    for (i = 1; i < 32; i++) sm[i] = 0xff;
-
+    for (i = 1; i < 32; i++)
+        sm[i] = 0xff;
     // Secret key.
-    for (i = 0; i < 32; i++) sm[32 + i] = sk[i];
-
+    for (i = 0; i < 32; i++)
+        sm[32 + i] = sk[i];
     // Message.
-    for (i = 0; i < n; i++) sm[64 + i] = m[i];
-
+    for (i = 0; i < n; i++)
+        sm[64 + i] = m[i];
     // Random suffix.
-    for (i = 0; i < 64; i++) sm[n + 64 + i] = rnd[i];
-
-    crypto_hash(r, sm, n+128);
+    for (i = 0; i < 64; i++)
+        sm[n + 64 + i] = rnd[i];
+    crypto_hash(r, sm, n + 128);
     reduce(r);
     scalarbase(p, r);
     pack(sm, p);
-
-    for (i = 0; i < 32; i++) sm[i + 32] = sk[32 + i];
+    for (i = 0; i < 32; i++)
+        sm[i + 32] = sk[32 + i];
     crypto_hash(h, sm, n + 64);
     reduce(h);
-
     // Wipe out random suffix.
-    for (i = 0; i < 64; i++) sm[n + 64 + i] = 0;
-
-    for (i = 0; i < 64; i++) x[i] = 0;
-    for (i = 0; i < 32; i++) x[i] = r[i];
+    for (i = 0; i < 64; i++)
+        sm[n + 64 + i] = 0;
+    for (i = 0; i < 64; i++)
+        x[i] = 0;
+    for (i = 0; i < 32; i++)
+        x[i] = r[i];
     for (i = 0; i < 32; i++) {
         for (j = 0; j < 32; j++) {
-            x[i+j] += h[i] * sk[j];
+            x[i + j] += h[i] * sk[j];
         }
     }
-
     modL(sm.subarray(32, n + 64), x);
-
     return n + 64;
 }
-
-
-function curve25519_sign(sm?: any, m?: any, n?: any, sk?: any, opt_rnd?: any) {
+function curve25519_sign(sm, m, n, sk, opt_rnd) {
     // If opt_rnd is provided, sm must have n + 128,
     // otherwise it must have n + 64 bytes.
-
     // Convert Curve25519 secret key into Ed25519 secret key (includes pub key).
-    const edsk = new Uint8Array(64);
-    const p = [gf(), gf(), gf(), gf()];
-
-    for (let i = 0; i < 32; i++) edsk[i] = sk[i];
+    var edsk = new Uint8Array(64);
+    var p = [gf(), gf(), gf(), gf()];
+    for (var i = 0; i < 32; i++)
+        edsk[i] = sk[i];
     // Ensure private key is in the correct format.
     edsk[0] &= 248;
     edsk[31] &= 127;
     edsk[31] |= 64;
-
     scalarbase(p, edsk);
     pack(edsk.subarray(32), p);
-
     // Remember sign bit.
-    const signBit = edsk[63] & 128;
-    let smlen;
-
+    var signBit = edsk[63] & 128;
+    var smlen;
     if (opt_rnd) {
         smlen = crypto_sign_direct_rnd(sm, m, n, edsk, opt_rnd);
-    } else {
+    }
+    else {
         smlen = crypto_sign_direct(sm, m, n, edsk);
     }
-
     // Copy sign bit from public key into signature.
     sm[63] |= signBit;
     return smlen;
 }
-
 function unpackneg(r, p) {
-    const t = gf(), chk = gf(), num = gf(),
-        den = gf(), den2 = gf(), den4 = gf(),
-        den6 = gf();
-
+    var t = gf(), chk = gf(), num = gf(), den = gf(), den2 = gf(), den4 = gf(), den6 = gf();
     set25519(r[2], gf1);
     unpack25519(r[1], p);
     S(num, r[1]);
     M(den, num, D);
     Z(num, num, r[2]);
     A(den, r[2], den);
-
     S(den2, den);
     S(den4, den2);
     M(den6, den4, den2);
     M(t, den6, num);
     M(t, t, den);
-
     pow2523(t, t);
     M(t, t, num);
     M(t, t, den);
     M(t, t, den);
     M(r[0], t, den);
-
     S(chk, r[0]);
     M(chk, chk, den);
-    if (neq25519(chk, num)) M(r[0], r[0], I);
-
+    if (neq25519(chk, num))
+        M(r[0], r[0], I);
     S(chk, r[0]);
     M(chk, chk, den);
-    if (neq25519(chk, num)) return -1;
-
-    if (par25519(r[0]) === (p[31]>>7)) Z(r[0], gf0, r[0]);
-
+    if (neq25519(chk, num))
+        return -1;
+    if (par25519(r[0]) === (p[31] >> 7))
+        Z(r[0], gf0, r[0]);
     M(r[3], r[0], r[1]);
     return 0;
 }
-
 function crypto_sign_open(m, sm, n, pk) {
-    let i, mlen;
-    const t = new Uint8Array(32), h = new Uint8Array(64);
-    const p = [gf(), gf(), gf(), gf()],
-        q = [gf(), gf(), gf(), gf()];
-
+    var i, mlen;
+    var t = new Uint8Array(32), h = new Uint8Array(64);
+    var p = [gf(), gf(), gf(), gf()], q = [gf(), gf(), gf(), gf()];
     mlen = -1;
-    if (n < 64) return -1;
-
-    if (unpackneg(q, pk)) return -1;
-
-    for (i = 0; i < n; i++) m[i] = sm[i];
-    for (i = 0; i < 32; i++) m[i+32] = pk[i];
+    if (n < 64)
+        return -1;
+    if (unpackneg(q, pk))
+        return -1;
+    for (i = 0; i < n; i++)
+        m[i] = sm[i];
+    for (i = 0; i < 32; i++)
+        m[i + 32] = pk[i];
     crypto_hash(h, m, n);
     reduce(h);
     scalarmult(p, q, h);
-
     scalarbase(q, sm.subarray(32));
     add(p, q);
     pack(t, p);
-
     n -= 64;
     if (crypto_verify_32(sm, 0, t, 0)) {
-        for (i = 0; i < n; i++) m[i] = 0;
+        for (i = 0; i < n; i++)
+            m[i] = 0;
         return -1;
     }
-
-    for (i = 0; i < n; i++) m[i] = sm[i + 64];
+    for (i = 0; i < n; i++)
+        m[i] = sm[i + 64];
     mlen = n;
     return mlen;
 }
-
 // Converts Curve25519 public key back to Ed25519 public key.
 // edwardsY = (montgomeryX - 1) / (montgomeryX + 1)
 function convertPublicKey(pk) {
-    const z = new Uint8Array(32),
-        x = gf(), a = gf(), b = gf();
-
+    var z = new Uint8Array(32), x = gf(), a = gf(), b = gf();
     unpack25519(x, pk);
-
     A(a, x, gf1);
     Z(b, x, gf1);
     inv25519(a, a);
     M(a, a, b);
-
     pack25519(z, a);
     return z;
 }
-
 function curve25519_sign_open(m, sm, n, pk) {
     // Convert Curve25519 public key into Ed25519 public key.
-    const edpk = convertPublicKey(pk);
-
+    var edpk = convertPublicKey(pk);
     // Restore sign bit from signature.
     edpk[31] |= sm[63] & 128;
-
     // Remove sign bit from signature.
     sm[63] &= 127;
-
     // Verify signed message.
     return crypto_sign_open(m, sm, n, edpk);
 }
-
 /* High-level API */
-
-function checkArrayTypes(...args: any[]) {
-    let t, i;
+function checkArrayTypes() {
+    var args = [];
+    for (var _i = 0; _i < arguments.length; _i++) {
+        args[_i] = arguments[_i];
+    }
+    var t, i;
     for (i = 0; i < arguments.length; i++) {
         if ((t = Object.prototype.toString.call(arguments[i])) !== '[object Uint8Array]')
             throw new TypeError('unexpected type ' + t + ', use Uint8Array');
     }
 }
-
-axlsign.sharedKey = function(secretKey, publicKey) {
+axlsign.sharedKey = function (secretKey, publicKey) {
     checkArrayTypes(publicKey, secretKey);
-    if (publicKey.length !== 32) throw new Error('wrong public key length');
-    if (secretKey.length !== 32) throw new Error('wrong secret key length');
-    const sharedKey = new Uint8Array(32);
+    if (publicKey.length !== 32)
+        throw new Error('wrong public key length');
+    if (secretKey.length !== 32)
+        throw new Error('wrong secret key length');
+    var sharedKey = new Uint8Array(32);
     crypto_scalarmult(sharedKey, secretKey, publicKey);
     return sharedKey;
 };
-
-axlsign.signMessage = function(secretKey, msg, opt_random) {
+axlsign.signMessage = function (secretKey, msg, opt_random) {
     checkArrayTypes(msg, secretKey);
-    if (secretKey.length !== 32) throw new Error('wrong secret key length');
+    if (secretKey.length !== 32)
+        throw new Error('wrong secret key length');
     if (opt_random) {
-        checkArrayTypes(opt_random)
-        if (opt_random.length !== 64) throw new Error('wrong random data length');
-        const buf = new Uint8Array(128 + msg.length);
+        checkArrayTypes(opt_random);
+        if (opt_random.length !== 64)
+            throw new Error('wrong random data length');
+        var buf = new Uint8Array(128 + msg.length);
         curve25519_sign(buf, msg, msg.length, secretKey, opt_random);
         return new Uint8Array(buf.subarray(0, 64 + msg.length));
-    } else {
-        const signedMsg = new Uint8Array(64 + msg.length);
+    }
+    else {
+        var signedMsg = new Uint8Array(64 + msg.length);
         curve25519_sign(signedMsg, msg, msg.length, secretKey);
         return signedMsg;
     }
 };
-
-axlsign.openMessage = function(publicKey, signedMsg) {
+axlsign.openMessage = function (publicKey, signedMsg) {
     checkArrayTypes(signedMsg, publicKey);
-    if (publicKey.length !== 32) throw new Error('wrong public key length');
-    const tmp = new Uint8Array(signedMsg.length);
-    const mlen = curve25519_sign_open(tmp, signedMsg, signedMsg.length, publicKey);
-    if (mlen < 0) return null;
-    const m = new Uint8Array(mlen);
-    for (let i = 0; i < m.length; i++) m[i] = tmp[i];
+    if (publicKey.length !== 32)
+        throw new Error('wrong public key length');
+    var tmp = new Uint8Array(signedMsg.length);
+    var mlen = curve25519_sign_open(tmp, signedMsg, signedMsg.length, publicKey);
+    if (mlen < 0)
+        return null;
+    var m = new Uint8Array(mlen);
+    for (var i = 0; i < m.length; i++)
+        m[i] = tmp[i];
     return m;
 };
-
-axlsign.sign = function(secretKey, msg, opt_random) {
+axlsign.sign = function (secretKey, msg, opt_random) {
     checkArrayTypes(secretKey, msg);
-    if (secretKey.length !== 32) throw new Error('wrong secret key length');
+    if (secretKey.length !== 32)
+        throw new Error('wrong secret key length');
     if (opt_random) {
         checkArrayTypes(opt_random);
-        if (opt_random.length !== 64) throw new Error('wrong random data length');
+        if (opt_random.length !== 64)
+            throw new Error('wrong random data length');
     }
-    const buf = new Uint8Array((opt_random ? 128 : 64) + msg.length);
+    var buf = new Uint8Array((opt_random ? 128 : 64) + msg.length);
     curve25519_sign(buf, msg, msg.length, secretKey, opt_random);
-    const signature = new Uint8Array(64);
-    for (let i = 0; i < signature.length; i++) signature[i] = buf[i];
+    var signature = new Uint8Array(64);
+    for (var i = 0; i < signature.length; i++)
+        signature[i] = buf[i];
     return signature;
 };
-
-axlsign.verify = function(publicKey, msg, signature) {
+axlsign.verify = function (publicKey, msg, signature) {
     checkArrayTypes(msg, signature, publicKey);
-    if (signature.length !== 64) throw new Error('wrong signature length');
-    if (publicKey.length !== 32) throw new Error('wrong public key length');
-    const sm = new Uint8Array(64 + msg.length);
-    const m = new Uint8Array(64 + msg.length);
-    let i;
-    for (i = 0; i < 64; i++) sm[i] = signature[i];
-    for (i = 0; i < msg.length; i++) sm[i+64] = msg[i];
+    if (signature.length !== 64)
+        throw new Error('wrong signature length');
+    if (publicKey.length !== 32)
+        throw new Error('wrong public key length');
+    var sm = new Uint8Array(64 + msg.length);
+    var m = new Uint8Array(64 + msg.length);
+    var i;
+    for (i = 0; i < 64; i++)
+        sm[i] = signature[i];
+    for (i = 0; i < msg.length; i++)
+        sm[i + 64] = msg[i];
     return (curve25519_sign_open(m, sm, sm.length, publicKey) >= 0);
 };
-
-axlsign.generateKeyPair = function(seed) {
+axlsign.generateKeyPair = function (seed) {
     checkArrayTypes(seed);
-    if (seed.length !== 32) throw new Error('wrong seed length');
-    const sk = new Uint8Array(32);
-    const pk = new Uint8Array(32);
-
-    for (let i = 0; i < 32; i++) sk[i] = seed[i];
-
+    if (seed.length !== 32)
+        throw new Error('wrong seed length');
+    var sk = new Uint8Array(32);
+    var pk = new Uint8Array(32);
+    for (var i = 0; i < 32; i++)
+        sk[i] = seed[i];
     crypto_scalarmult_base(pk, sk);
-
     // Turn secret key into the correct format.
     sk[0] &= 248;
     sk[31] &= 127;
     sk[31] |= 64;
-
     // Remove sign bit from public key.
     pk[31] &= 127;
-
     return {
         public: pk,
         private: sk
     };
 };
-
-
-export default axlsign;
+exports["default"] = axlsign;

@@ -30,14 +30,14 @@ function buildSeedHash(seedBytes: Uint8Array): Uint8Array {
 
 function byteArrayToWordArrayEx(arr: Uint8Array) {
   const len = arr.length
-  const words = []
+  const words:any = []
   for (let i = 0; i < len; i++) {
     words[i >>> 2] |= (arr[i] & 0xff) << (24 - (i % 4) * 8)
   }
   return CryptoJS.lib.WordArray.create(words)
 }
 
-function wordArrayToByteArrayEx(wordArray) {
+function wordArrayToByteArrayEx(wordArray:any) {
   let words = wordArray.words
   let sigBytes = wordArray.sigBytes
 
@@ -56,7 +56,7 @@ const stringToUint8Array = (str: string) =>
 export type PUBLIC_KEY_TYPES = string | PublicKey | Uint8Array
 
 export const publicKeyToString = (pk: PUBLIC_KEY_TYPES) =>
-  typeof pk === 'string' ? pk : (pk['public'] ? pk['public'] : base58encode(pk as Uint8Array))
+  typeof pk === 'string' ? pk : (pk instanceof Uint8Array ?  base58encode(pk ) : pk.public)
 
 export const ADDRESS_LENGTH = 26
 export const PUBLIC_KEY_LENGTH = 32
@@ -174,7 +174,7 @@ const buildTransactionSignature = (dataBytes: Uint8Array, privateKey: string): s
   return base58.encode(signature)
 }
 
-function nodeRandom(count, options) {
+function nodeRandom(count:any, options:any) {
   const crypto = require('crypto')
   const buf = crypto.randomBytes(count)
 
@@ -194,7 +194,7 @@ function nodeRandom(count, options) {
   }
 }
 
-function browserRandom(count, options) {
+function browserRandom(count:any, options:any) {
   const nativeArr = new Uint8Array(count)
   const crypto = (global as any).crypto || (global as any).msCrypto
   crypto.getRandomValues(nativeArr)
@@ -216,7 +216,7 @@ function browserRandom(count, options) {
   }
 }
 
-function secureRandom(count, options) {
+function secureRandom(count:any, options:any) {
   options = options || { type: 'Array' }
 
   if (((global as any).crypto || (global as any).msCrypto) != undefined) {
@@ -245,7 +245,7 @@ export const BASE58_STRING: serializer<string> = (value: string) => base58.decod
 
 export const BASE64_STRING: serializer<string> = (value: string) => Uint8Array.from(Buffer.from(value, 'base64'))
 
-export const STRING: serializer<string> = (value: string) => value ? stringToUint8Array(value) : empty
+export const STRING: serializer<string> = (value: string | null | undefined) => value ? stringToUint8Array(value) : empty
 
 export const BYTE: serializer<number> = (value: number) => Uint8Array.from([value])
 
@@ -263,19 +263,18 @@ export const INT: serializer<number> = (value: number) => {
   b.writeInt32BE(value, 0)
   return Uint8Array.from([...b])
 }
-export const OPTION = <T>(s: serializer<T>) => (value: T) =>
-  value == undefined
-    || value == null
+export const OPTION = <T, R = T | null | undefined>(s: serializer<T>): serializer<R> => (value: R) =>
+  value == null
     || (typeof value == 'string' && value.length == 0)
-    ? zero : concat(one, s(value))
+    ? zero : concat(one, s(value as any))
 
-export const LEN = <T>(lenSerializer: serializer<number>) => (valueSerializer: serializer<T>) => (value: T) => {
+export const LEN = (lenSerializer: serializer<number>) => <T>(valueSerializer: serializer<T>):serializer<T> => (value: T) => {
   const data = valueSerializer(value)
   const len = lenSerializer(data.length)
   return concat(len, data)
 }
 
-export const COUNT = <T>(countSerializer: serializer<number>) => (itemSerializer: serializer<T>) => (items: T[]) => {
+export const COUNT = (countSerializer: serializer<number>) => <T>(itemSerializer: serializer<T>) => (items: T[]) => {
   const data = concat(...items.map(x => itemSerializer(x)))
   const len = countSerializer(items.length)
   return concat(len, data)
