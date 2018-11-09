@@ -40,6 +40,12 @@ module.exports = (args) => ({
   resolve: {
     extensions: ['.ts', '.js']
   },
+  optimization: {
+    splitChunks: {
+      chunks: "all",
+      minSize: 0
+    }
+  },
   plugins: [
     new copy([{ from: 'README.md' }]),
     {

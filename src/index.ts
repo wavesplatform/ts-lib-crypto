@@ -9,8 +9,7 @@ import * as blake from './libs/blake2b'
 import { keccak256 } from './libs/sha3'
 import base58 from './libs/base58'
 import axlsign from './libs/axlsign'
-import { ValidationResult, noError, mergeValidationResults, isValid } from './validation';
-export { ValidationResult, noError, mergeValidationResults, isValid } from './validation';
+import { ValidationResult, noError, mergeValidationResults, isValid } from './validation'
 
 declare function unescape(s: string): string
 
@@ -31,14 +30,14 @@ function buildSeedHash(seedBytes: Uint8Array): Uint8Array {
 
 function byteArrayToWordArrayEx(arr: Uint8Array) {
   const len = arr.length
-  const words:any = []
+  const words: any = []
   for (let i = 0; i < len; i++) {
     words[i >>> 2] |= (arr[i] & 0xff) << (24 - (i % 4) * 8)
   }
   return CryptoJS.lib.WordArray.create(words)
 }
 
-function wordArrayToByteArrayEx(wordArray:any) {
+function wordArrayToByteArrayEx(wordArray: any) {
   let words = wordArray.words
   let sigBytes = wordArray.sigBytes
 
@@ -55,9 +54,10 @@ const stringToUint8Array = (str: string) =>
   Uint8Array.from([...unescape(encodeURIComponent(str))].map(c => c.charCodeAt(0)))
 
 export type PUBLIC_KEY_TYPES = string | PublicKey | Uint8Array
+export type Option<T> = T | null | undefined
 
 export const publicKeyToString = (pk: PUBLIC_KEY_TYPES) =>
-  typeof pk === 'string' ? pk : (pk instanceof Uint8Array ?  base58encode(pk ) : pk.public)
+  typeof pk === 'string' ? pk : (pk instanceof Uint8Array ? base58encode(pk) : pk.public)
 
 export const ADDRESS_LENGTH = 26
 export const PUBLIC_KEY_LENGTH = 32
@@ -175,7 +175,7 @@ const buildTransactionSignature = (dataBytes: Uint8Array, privateKey: string): s
   return base58.encode(signature)
 }
 
-function nodeRandom(count:any, options:any) {
+function nodeRandom(count: any, options: any) {
   const crypto = require('crypto')
   const buf = crypto.randomBytes(count)
 
@@ -195,7 +195,7 @@ function nodeRandom(count:any, options:any) {
   }
 }
 
-function browserRandom(count:any, options:any) {
+function browserRandom(count: any, options: any) {
   const nativeArr = new Uint8Array(count)
   const crypto = (global as any).crypto || (global as any).msCrypto
   crypto.getRandomValues(nativeArr)
@@ -217,7 +217,7 @@ function browserRandom(count:any, options:any) {
   }
 }
 
-function secureRandom(count:any, options:any) {
+function secureRandom(count: any, options: any) {
   options = options || { type: 'Array' }
 
   if (((global as any).crypto || (global as any).msCrypto) != undefined) {
@@ -246,7 +246,7 @@ export const BASE58_STRING: serializer<string> = (value: string) => base58.decod
 
 export const BASE64_STRING: serializer<string> = (value: string) => Uint8Array.from(Buffer.from(value, 'base64'))
 
-export const STRING: serializer<string> = (value: string | null | undefined) => value ? stringToUint8Array(value) : empty
+export const STRING: serializer<Option<string>> = (value: Option<string>) => value ? stringToUint8Array(value) : empty
 
 export const BYTE: serializer<number> = (value: number) => Uint8Array.from([value])
 
@@ -269,7 +269,7 @@ export const OPTION = <T, R = T | null | undefined>(s: serializer<T>): serialize
     || (typeof value == 'string' && value.length == 0)
     ? zero : concat(one, s(value as any))
 
-export const LEN = (lenSerializer: serializer<number>) => <T>(valueSerializer: serializer<T>):serializer<T> => (value: T) => {
+export const LEN = (lenSerializer: serializer<number>) => <T>(valueSerializer: serializer<T>): serializer<T> => (value: T) => {
   const data = valueSerializer(value)
   const len = lenSerializer(data.length)
   return concat(len, data)
