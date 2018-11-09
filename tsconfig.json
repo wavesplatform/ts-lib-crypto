@@ -9,9 +9,7 @@
     "declaration": true,
     "module": "commonjs",
     "outDir": "dist",
-    "alwaysStrict": false,
-    "strictNullChecks": false,
-    "noImplicitAny": false
+    "strict": true
   },
   "include": [
     "./src/**/*"
