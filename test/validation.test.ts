@@ -1,4 +1,4 @@
-import { validateAddress, validatePublicKey, verifySignature, address, base58decode, base58encode, randomUint8Array, signBytes, publicKey } from '../src'
+import { validateAddress, validatePublicKey, verifySignature, base58encode, randomUint8Array, signBytes, publicKey } from '../src'
 import { isValid } from '../src/validation'
 
 describe('address validation', () => {

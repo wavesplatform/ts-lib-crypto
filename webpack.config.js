@@ -17,12 +17,15 @@ const deleteFolder = (folderPath) => {
 
 module.exports = (args) => ({
   mode: 'production',
-  entry: ['./src/index.ts'],
+  entry: {
+    index: './src/index.ts',
+    validation: './src/validation.ts',
+  },
   target: 'node',
   output: {
     library: 'waves-crypto',
     libraryTarget: 'commonjs2',
-    filename: 'index.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'dist')
   },
   module: {

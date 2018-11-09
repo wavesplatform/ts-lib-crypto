@@ -10,6 +10,7 @@ import { keccak256 } from './libs/sha3'
 import base58 from './libs/base58'
 import axlsign from './libs/axlsign'
 import { ValidationResult, noError, mergeValidationResults, isValid } from './validation';
+export { ValidationResult, noError, mergeValidationResults, isValid } from './validation';
 
 declare function unescape(s: string): string
 
