@@ -1,5 +1,5 @@
 {
-  "name": "waves-crypto",
+  "name": "@waves/waves-crypto",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -9,6 +9,10 @@
   },
   "author": "Yuriy Naydenov",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wavesplatform/waves-crypto.git"
+  },
   "devDependencies": {
     "@types/jest": "^23.3.2",
     "@types/long": "^4.0.0",
