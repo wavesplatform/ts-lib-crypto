@@ -1,4 +1,14 @@
-import { address, keyPair, publicKey, privateKey, signBytes, verifySignature, base58encode, base58decode } from '../src'
+import {
+  address,
+  keyPair,
+  publicKey,
+  privateKey,
+  signBytes,
+  verifySignature,
+  base58encode,
+  base58decode,
+  generateNewSeed
+} from '../src'
 
 const seed = '1f98af466da54014bdc08bfbaaaf3c67'
 
@@ -21,6 +31,11 @@ test('privateKey', () =>
   expect(privateKey(seed)).toBe('AAJPFvUtBgSMWbDQgCJUxzXmYeggKgn8a4LEMGaoWEMj')
 )
 
+test('generateNewSeed', () => {
+  const seed = generateNewSeed(15)
+  console.log(seed)
+})
+
 test('signature roundtrip', () => {
   const bytes = Uint8Array.from([1, 2, 3, 4])
   const sig = signBytes(bytes, seed)
@@ -35,3 +50,4 @@ test('base58 roundtrip', () => {
   const result = base58encode(base58decode(base58))
   expect(result).toEqual(base58)
 })
+

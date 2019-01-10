@@ -9,7 +9,7 @@
     "declaration": true,
     "module": "commonjs",
     "outDir": "dist",
-    "strict": true
+    "strict": true,
   },
   "include": [
     "./src/**/*"
