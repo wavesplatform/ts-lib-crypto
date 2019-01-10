@@ -8,8 +8,6 @@ import * as blake from './libs/blake2b'
 import { keccak256 } from './libs/sha3'
 import base58 from './libs/base58'
 import axlsign from './libs/axlsign'
-import dictionary from "./dictionary";
-import converters from "./libs/converters";
 
 export const libs = {
   CryptoJS,
@@ -129,7 +127,7 @@ export const address = (keyOrSeed: KeyPair | PublicKey | string, chainId: string
     buildAddress(base58.decode(keyOrSeed.public), chainId)
 
 export const signBytes = (bytes: Uint8Array, seed: string): string =>
-  buildTransactionSignature(bytes, privateKey(seed))
+  signWithPrivateKey(bytes, privateKey(seed))
 
 export const verifySignature = (publicKey: string, bytes: Uint8Array, signature: string): boolean => {
   const signatureBytes = base58.decode(signature)
@@ -151,7 +149,7 @@ export function arraysEqual(a: any[] | Uint8Array, b: any[] | Uint8Array): boole
 
 export const hashBytes = (bytes: Uint8Array) => base58.encode(blake2b(bytes))
 
-const buildTransactionSignature = (dataBytes: Uint8Array, privateKey: string): string => {
+export const signWithPrivateKey = (dataBytes: Uint8Array, privateKey: string): string => {
   const privateKeyBytes = base58.decode(privateKey)
   const signature = axlsign.sign(privateKeyBytes, dataBytes, randomUint8Array(64))
   return base58.encode(signature)
@@ -215,66 +213,4 @@ export function randomUint8Array(length: number): Uint8Array {
   return secureRandom(length, {type: 'Uint8Array'})
 }
 
-
-export function generateNewSeed(length: number) {
-  const random = Array.from({length})
-    .map(_ => randomUint8Array(4)
-      .reduce((acc, next, i) => acc + next * 2 ** (i * 4), 0)
-    );
-
-  const wordCount = dictionary.length;
-  const phrase = [];
-
-  for (let i = 0; i < length; i++) {
-    const wordIndex = random[i] % wordCount;
-    phrase.push(dictionary[wordIndex]);
-  }
-
-  return phrase.join(' ');
-}
-
-
-
-function strengthenPassword(password: string, rounds: number = 5000): string {
-  while (rounds--) {
-    const bytes = converters.stringToByteArray(password);
-    const wordArray = converters.byteArrayToWordArrayEx(Uint8Array.from(bytes));
-    const resultWordArray = CryptoJS.SHA256(wordArray);
-    const byteArrayPassword = converters.wordArrayToByteArrayEx(resultWordArray);
-    password = converters.byteArrayToHexString(byteArrayPassword)
-  }
-  return password;
-}
-
-export function encryptSeed(seed: string, password: string, encryptionRounds?: number): string {
-
-  if (!seed || typeof seed !== 'string') {
-    throw new Error('Seed is required');
-  }
-
-  if (!password || typeof password !== 'string') {
-    throw new Error('Password is required');
-  }
-
-  password = strengthenPassword(password, encryptionRounds);
-  return CryptoJS.AES.encrypt(seed, password).toString();
-
-}
-
-
-export function decryptSeed(encryptedSeed: string, password: string, encryptionRounds?: number): string {
-
-  if (!encryptedSeed || typeof encryptedSeed !== 'string') {
-    throw new Error('Encrypted seed is required');
-  }
-
-  if (!password || typeof password !== 'string') {
-    throw new Error('Password is required');
-  }
-
-  password = strengthenPassword(password, encryptionRounds);
-  const hexSeed = CryptoJS.AES.decrypt(encryptedSeed, password);
-  return converters.hexStringToString(hexSeed.toString());
-
-}
 

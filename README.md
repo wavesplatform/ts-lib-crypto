@@ -1,16 +1,14 @@
-# waves-crypto  [![npm version](https://badge.fury.io/js/waves-crypto.svg)](https://www.npmjs.com/package/@waves/waves-crypto)
+# waves-crypto  [![npm version](https://badge.fury.io/js/%40waves%2Fwaves-crypto.svg)](https://www.npmjs.com/package/@waves/waves-crypto)
 
 Using this library you can easily create and sign binary data for Waves blockchain.
 It provides all you need on crypto and binary layers.
 Small and dependency-free.
 
 ### Includes:
-- Address generation
-- Address validation 
 - Key pair generation
+- Address generation
 - Bytes signature
 - Signature validation
-- Serialization primitives
 
 ### Keys and Addresses
 
@@ -36,17 +34,6 @@ wc.publicKey('seed') //HzSnoJKTVwezUBmo2gh9HYq52F1maKBsvv1ZWrZAHyHV
 
 //Private only
 wc.privateKey('seed') //4mmuDf2GQJ6vJrKzVzyKUyGBwv6AfpC5TKpaF3MfEE5w
-
-```
-### Address validation
-
-```js
-const { validateAddress } = require('waves-crypto')
-
-const validationErrors = validateAddress('3P2GVAniTmceyS7LE8HtQg1GEhyoghUZSvn') 
-// ['Address checksum is invalid.']
-
-isValid(validationErrors) //false
 
 ```
 

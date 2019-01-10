@@ -7,7 +7,6 @@ import {
   verifySignature,
   base58encode,
   base58decode,
-  generateNewSeed
 } from '../src'
 
 const seed = '1f98af466da54014bdc08bfbaaaf3c67'
@@ -30,11 +29,6 @@ test('publicKey', () =>
 test('privateKey', () =>
   expect(privateKey(seed)).toBe('AAJPFvUtBgSMWbDQgCJUxzXmYeggKgn8a4LEMGaoWEMj')
 )
-
-test('generateNewSeed', () => {
-  const seed = generateNewSeed(15)
-  console.log(seed)
-})
 
 test('signature roundtrip', () => {
   const bytes = Uint8Array.from([1, 2, 3, 4])
