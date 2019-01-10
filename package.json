@@ -1,6 +1,6 @@
 {
   "name": "@waves/waves-crypto",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "main": "dist/index.js",
   "types": "src/index.ts",
   "scripts": {
@@ -15,11 +15,11 @@
     "url": "https://github.com/wavesplatform/waves-crypto.git"
   },
   "dependencies": {
-    "crypto-js": "^3.1.9-1"
+    "crypto-js": "^3.1.9-1",
+    "@types/crypto-js": "^3.1.43"
   },
   "devDependencies": {
     "@types/node": "^10.9.4",
-    "@types/crypto-js": "^3.1.43",
     "jest": "^23.6.0",
     "ts-jest": "^23.10.1",
     "typescript": "^3.0.3"
