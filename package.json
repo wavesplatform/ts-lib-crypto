@@ -1,11 +1,11 @@
 {
   "name": "@waves/waves-crypto",
-  "version": "2.0.3",
+  "version": "2.0.4",
   "main": "dist/index.js",
-  "types": "src/index.ts",
+  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
-    "prepublishOnly": "tsc",
+    "build": "tsc; cp src/libs/*.d.ts dist/libs;cp src/libs/*.js dist/libs",
+    "prepublishOnly": "npm run test;npm run build",
     "test": "jest"
   },
   "author": "Yuriy Naydenov",

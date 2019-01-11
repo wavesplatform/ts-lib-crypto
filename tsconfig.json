@@ -5,9 +5,9 @@
       "es6",
       "dom"
     ],
-    //"declaration": true,
+    "declaration": true,
     "sourceMap": true,
-    "allowJs": true,
+    //"allowJs": true,
     "module": "commonjs",
     "outDir": "dist",
     "strict": true

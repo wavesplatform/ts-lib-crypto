@@ -20,7 +20,7 @@ export const libs = {
 export const concat = (...arrays: (Uint8Array | number[])[]): Uint8Array =>
   arrays.reduce((a, b) => Uint8Array.from([...a, ...b]), new Uint8Array(0)) as Uint8Array
 
-function buildAddress(publicKeyBytes: Uint8Array, chainId: string = 'W'): string {
+export function buildAddress(publicKeyBytes: Uint8Array, chainId: string = 'W'): string {
   const prefix = [1, chainId.charCodeAt(0)]
   const publicKeyHashPart = hashChain(publicKeyBytes).slice(0, 20)
   const rawAddress = concat(prefix, publicKeyHashPart)
@@ -28,9 +28,16 @@ function buildAddress(publicKeyBytes: Uint8Array, chainId: string = 'W'): string
   return base58.encode(concat(rawAddress, addressHash))
 }
 
-function buildSeedHash(seedBytes: Uint8Array): Uint8Array {
-  const nonce = [0, 0, 0, 0]
-  const seedBytesWithNonce = concat(nonce, seedBytes)
+export function buildSeedHash(seedBytes: Uint8Array, nonce?: number): Uint8Array {
+  const nonceArray = [0,0,0,0];
+  if (nonce && nonce > 0){
+    let remainder = nonce;
+    for (let i = 3; i >= 0; i--){
+      nonceArray[3-i] = Math.floor(remainder / 2 ** (i*8));
+      remainder = remainder % 2 ** (i*8)
+    }
+  }
+  const seedBytesWithNonce = concat(nonceArray, seedBytes)
   const seedHash = hashChain(seedBytesWithNonce)
   return sha256(seedHash)
 }
@@ -41,7 +48,7 @@ function byteArrayToWordArrayEx(arr: Uint8Array) {
   for (let i = 0; i < len; i++) {
     words[i >>> 2] |= (arr[i] & 0xff) << (24 - (i % 4) * 8)
   }
-  return CryptoJS.lib.WordArray.create(words)
+  return (CryptoJS.lib.WordArray.create as any)(words, len)
 }
 
 function wordArrayToByteArrayEx(wordArray: any) {
@@ -57,7 +64,7 @@ function wordArrayToByteArrayEx(wordArray: any) {
   return u8
 }
 
-const stringToUint8Array = (str: string) =>
+export const stringToUint8Array = (str: string) =>
   Uint8Array.from([...unescape(encodeURIComponent(str))].map(c => c.charCodeAt(0)))
 
 export type PUBLIC_KEY_TYPES = string | PublicKey | Uint8Array
@@ -82,6 +89,7 @@ export function keccak(input: Uint8Array): Uint8Array {
 export function sha256(input: Uint8Array): Uint8Array {
   const wordArray = byteArrayToWordArrayEx(input)
   const resultWordArray = CryptoJS.SHA256(wordArray)
+
   return wordArrayToByteArrayEx(resultWordArray)
 }
 
@@ -214,3 +222,45 @@ export function randomUint8Array(length: number): Uint8Array {
 }
 
 
+let charToNibble:Record<string, number> = {};
+let nibbleToChar: string[] = [];
+let i;
+for (i = 0; i <= 9; ++i) {
+  let character = i.toString();
+  charToNibble[character] = i;
+  nibbleToChar.push(character);
+}
+
+for (i = 10; i <= 15; ++i) {
+  let lowerChar = String.fromCharCode('a'.charCodeAt(0) + i - 10);
+  let upperChar = String.fromCharCode('A'.charCodeAt(0) + i - 10);
+
+  charToNibble[lowerChar] = i;
+  charToNibble[upperChar] = i;
+  nibbleToChar.push(lowerChar);
+}
+
+export function byteArrayToHexString(bytes: Uint8Array) {
+  let str = '';
+  for (let i = 0; i < bytes.length; ++i) {
+    if (bytes[i] < 0) {
+      bytes[i] += 256;
+    }
+    str += nibbleToChar[bytes[i] >> 4] + nibbleToChar[bytes[i] & 0x0F];
+  }
+  return str;
+}
+
+export function hexStringToByteArray(str: string) {
+  let bytes = [];
+  let i = 0;
+  if (0 !== str.length % 2) {
+    bytes.push(charToNibble[str.charAt(0)]);
+    ++i;
+  }
+
+  for (; i < str.length - 1; i += 2)
+    bytes.push((charToNibble[str.charAt(i)] << 4) + charToNibble[str.charAt(i + 1)]);
+
+  return bytes;
+}
