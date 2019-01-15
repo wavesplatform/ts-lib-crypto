@@ -205,14 +205,20 @@ function browserRandom(count: any, options: any) {
   }
 }
 
+const isBrowser = typeof window !== 'undefined' && ({}).toString.call(window) === '[object Window]'
+const isNode = typeof global !== "undefined" && ({}).toString.call(global) === '[object global]'
+const isJest = process.env.JEST_WORKER_ID !== undefined;
+
 function secureRandom(count: any, options: any) {
   options = options || {type: 'Array'}
 
-  if (((global as any).crypto || (global as any).msCrypto) != undefined) {
+  if (isBrowser) {
     return browserRandom(count, options)
-  } else if (typeof exports === 'object' && typeof module !== 'undefined') {
+  } else if (isNode) {
     return nodeRandom(count, options)
-  } else {
+  } else if (isJest) {
+    return nodeRandom(count, options)
+  }else {
     throw new Error('Your environment is not defined');
   }
 }
