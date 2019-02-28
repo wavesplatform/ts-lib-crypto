@@ -1,4 +1,13 @@
-import { address, keyPair, publicKey, privateKey, signBytes, verifySignature, base58encode, base58decode } from '../src'
+import {
+  address,
+  keyPair,
+  publicKey,
+  privateKey,
+  signBytes,
+  verifySignature,
+  base58encode,
+  base58decode, sha256, buildSeedHash, stringToUint8Array,
+} from '../src'
 
 const seed = '1f98af466da54014bdc08bfbaaaf3c67'
 
@@ -35,3 +44,4 @@ test('base58 roundtrip', () => {
   const result = base58encode(base58decode(base58))
   expect(result).toEqual(base58)
 })
+

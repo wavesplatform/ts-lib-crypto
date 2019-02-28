@@ -5,8 +5,9 @@
       "es6",
       "dom"
     ],
-    //"sourceMap": true,
     "declaration": true,
+    "sourceMap": true,
+    //"allowJs": true,
     "module": "commonjs",
     "outDir": "dist",
     "strict": true
@@ -17,6 +18,7 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "dist",
+    "test"
   ]
 }
