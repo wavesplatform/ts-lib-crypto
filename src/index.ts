@@ -173,11 +173,7 @@ function nodeRandom(count: any, options: any) {
     case 'Buffer':
       return buf
     case 'Uint8Array':
-      const arr = new Uint8Array(count)
-      for (let i = 0; i < count; ++i) {
-        arr[i] = buf.readUInt8(i)
-      }
-      return arr
+      return Uint8Array.from(buf)
     default:
       throw new Error(options.type + ' is unsupported.')
   }
