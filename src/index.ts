@@ -1,5 +1,5 @@
 // Copyright (c) 2018 Yuriy Naydenov
-// 
+//
 // This software is released under the MIT License.
 // https://opensource.org/licenses/MIT
 
@@ -171,22 +171,22 @@ function nodeRandom(count: any, options: any) {
     case 'Array':
       return [].slice.call(buf)
     case 'Buffer':
-      return buf
+      return buf;
     case 'Uint8Array':
-      return Uint8Array.from(buf)
+      return Uint8Array.from(buf);
     default:
       throw new Error(options.type + ' is unsupported.')
   }
 }
 
 function browserRandom(count: any, options: any) {
-  const nativeArr = new Uint8Array(count)
+  const nativeArr = new Uint8Array(count);
   const crypto = (global as any).crypto || (global as any).msCrypto
-  crypto.getRandomValues(nativeArr)
+  crypto.getRandomValues(nativeArr);
 
   switch (options.type) {
     case 'Array':
-      return [].slice.call(nativeArr)
+      return [].slice.call(nativeArr);
     case 'Buffer':
       try {
         const b = new Buffer(1)
@@ -265,4 +265,66 @@ export function hexStringToByteArray(str: string) {
     bytes.push((charToNibble[str.charAt(i)] << 4) + charToNibble[str.charAt(i + 1)]);
 
   return bytes;
+}
+
+export function getSharedKey(privateKeyFrom: string, publicKeyTo: string): Uint8Array {
+  const prvk = base58decode(privateKeyFrom);
+  const pubk = base58decode(publicKeyTo);
+  return axlsign.sharedKey(prvk, pubk);
+}
+
+export function encryptMessage(sharedKey: string, message: string, passwordLength = 128) {
+  const password = randomUint8Array(passwordLength);
+  const wordPassword = byteArrayToWordArrayEx(password);
+  
+  const encodedPassword = CryptoJS.AES.encrypt(wordPassword, sharedKey).toString();
+  const encodedMessage = CryptoJS.AES.encrypt(message, CryptoJS.enc.Base64.stringify(wordPassword)).toString();
+  const passwordHash = blake2b(password).slice(-4);
+  const messageHash = blake2b(stringToUint8Array(message)).slice(-4);
+  
+  const encodedPasswordInBytes = wordArrayToByteArrayEx(CryptoJS.enc.Base64.parse(encodedPassword));
+  const encodedMessageInBytes = wordArrayToByteArrayEx(CryptoJS.enc.Base64.parse(encodedMessage));
+  
+  const messageData = new Uint8Array([...encodedPasswordInBytes, ...passwordHash, ...encodedMessageInBytes, ...messageHash]);
+  return base58encode(messageData);
+}
+
+export function decryptMessage(sharedKey: string, encryptedMessage: string) {
+  const bytes = base58decode(encryptedMessage);
+  const messageData = bytes.slice(0, -4);
+  const messageHash = bytes.slice(-4);
+
+  let password = null;
+  let message = null;
+
+  for (let l = 32; l < messageData.length; l++ ) {
+    const pwd = messageData.slice(0, l);
+    const wordPassword = byteArrayToWordArrayEx(pwd);
+    try {
+      const decryptPass = CryptoJS.AES.decrypt(CryptoJS.enc.Base64.stringify(wordPassword), sharedKey);
+      const hash = blake2b(wordArrayToByteArrayEx(decryptPass)).slice(-4);
+      if (hash.toString() !== messageData.slice(l, l + 4).toString()) {
+        throw new Error('Incorrect password');
+      }
+
+      password = decryptPass;
+      message = messageData.slice(l + 4);
+      break;
+    } catch (e) {
+    }
+  }
+
+  if (!message || !password) {
+    throw new Error('Incorrect message');
+  }
+
+  const messageInWord = CryptoJS.enc.Base64.stringify(byteArrayToWordArrayEx(message));
+  const decryptedMessage = CryptoJS.AES.decrypt(messageInWord, CryptoJS.enc.Base64.stringify(password));
+  const msg = decryptedMessage.toString(CryptoJS.enc.Utf8);
+  const msgHash = blake2b(stringToUint8Array(msg)).slice(-4);
+  if (messageHash.toString() !== msgHash.toString()) {
+    throw new Error('Incorrect message');
+  }
+  
+  return msg;
 }
