@@ -274,12 +274,17 @@ export function getSharedKey(privateKeyFrom: string, publicKeyTo: string): Uint8
 }
 
 export function encryptMessage(sharedKey: string, message: string, passwordLength = 128) {
+  if (passwordLength < 10) {
+    throw new Error('Password length is small');
+  }
+  
   const password = randomUint8Array(passwordLength);
   const wordPassword = byteArrayToWordArrayEx(password);
-  
+  const passwordFullHash = blake2b(password);
+  const salt = byteArrayToWordArrayEx(passwordFullHash).toString();
   const encodedPassword = CryptoJS.AES.encrypt(wordPassword, sharedKey).toString();
-  const encodedMessage = CryptoJS.AES.encrypt(message, CryptoJS.enc.Base64.stringify(wordPassword)).toString();
-  const passwordHash = blake2b(password).slice(-4);
+  const encodedMessage = CryptoJS.AES.encrypt(salt + message, CryptoJS.enc.Base64.stringify(wordPassword)).toString();
+  const passwordHash = passwordFullHash.slice(-4);
   const messageHash = blake2b(stringToUint8Array(message)).slice(-4);
   
   const encodedPasswordInBytes = wordArrayToByteArrayEx(CryptoJS.enc.Base64.parse(encodedPassword));
@@ -294,37 +299,35 @@ export function decryptMessage(sharedKey: string, encryptedMessage: string) {
   const messageData = bytes.slice(0, -4);
   const messageHash = bytes.slice(-4);
 
-  let password = null;
-  let message = null;
-
   for (let l = 32; l < messageData.length; l++ ) {
     const pwd = messageData.slice(0, l);
     const wordPassword = byteArrayToWordArrayEx(pwd);
+    
     try {
       const decryptPass = CryptoJS.AES.decrypt(CryptoJS.enc.Base64.stringify(wordPassword), sharedKey);
-      const hash = blake2b(wordArrayToByteArrayEx(decryptPass)).slice(-4);
+      const fullHash = blake2b(wordArrayToByteArrayEx(decryptPass));
+      const hash = fullHash.slice(-4);
+      
       if (hash.toString() !== messageData.slice(l, l + 4).toString()) {
         throw new Error('Incorrect password');
       }
 
-      password = decryptPass;
-      message = messageData.slice(l + 4);
-      break;
+      const password = decryptPass;
+      const message = messageData.slice(l + 4);
+      
+      const messageInWord = CryptoJS.enc.Base64.stringify(byteArrayToWordArrayEx(message));
+      const decryptedMessage = CryptoJS.AES.decrypt(messageInWord, CryptoJS.enc.Base64.stringify(password));
+      const salt = byteArrayToWordArrayEx(fullHash).toString();
+      const msg = decryptedMessage.toString(CryptoJS.enc.Utf8).replace(salt, '');
+      const msgHash = blake2b(stringToUint8Array(msg)).slice(-4);
+      if (messageHash.toString() !== msgHash.toString()) {
+        continue;
+      }
+      
+      return  msg;
     } catch (e) {
     }
   }
-
-  if (!message || !password) {
-    throw new Error('Incorrect message');
-  }
-
-  const messageInWord = CryptoJS.enc.Base64.stringify(byteArrayToWordArrayEx(message));
-  const decryptedMessage = CryptoJS.AES.decrypt(messageInWord, CryptoJS.enc.Base64.stringify(password));
-  const msg = decryptedMessage.toString(CryptoJS.enc.Utf8);
-  const msgHash = blake2b(stringToUint8Array(msg)).slice(-4);
-  if (messageHash.toString() !== msgHash.toString()) {
-    throw new Error('Incorrect message');
-  }
   
-  return msg;
+  throw new Error('Incorrect message');
 }
