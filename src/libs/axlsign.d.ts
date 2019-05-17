@@ -1,2 +1,2 @@
-declare const axlsign: any;
-export default axlsign;
+declare const axlsign: any
+export default axlsign

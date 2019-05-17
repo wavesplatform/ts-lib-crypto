@@ -6,4 +6,4 @@
  * @copyright Chen, Yi-Cyuan 2015-2016
  * @license MIT
  */
-export declare const keccak256: any;
+export declare const keccak256: any

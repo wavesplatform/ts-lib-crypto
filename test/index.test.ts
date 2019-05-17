@@ -22,7 +22,7 @@ test('address', () =>
 test('keyPair', () =>
     expect(keyPair(seed)).toEqual({
         public: '12wYe4Y5Z5uJXRQw44huYYszidfMfFbwhjyVTparH1wT',
-        private: 'AAJPFvUtBgSMWbDQgCJUxzXmYeggKgn8a4LEMGaoWEMj'
+        private: 'AAJPFvUtBgSMWbDQgCJUxzXmYeggKgn8a4LEMGaoWEMj',
     })
 )
 
@@ -50,22 +50,22 @@ test('base58 roundtrip', () => {
 })
 
 test('generate shared key', () => {
-    const a = keyPair(seed);
-    const b = keyPair(seed + seed);
-    const shKey = getSharedKey(a.private, b.public);
-    const shKey2 = getSharedKey(b.private, a.public);
+    const a = keyPair(seed)
+    const b = keyPair(seed + seed)
+    const shKey = getSharedKey(a.private, b.public)
+    const shKey2 = getSharedKey(b.private, a.public)
     expect(shKey.toString()).toEqual(shKey2.toString())
 })
 
 test('encrypt and decrypt message', () => {
-    const msg = 'test message from me';
-    const a = keyPair(seed);
-    const b = keyPair(seed + seed);
-    const shKey = getSharedKey(a.private, b.public);
-    const message = encryptMessage(base58encode(shKey), msg);
+    const msg = 'test message from me'
+    const a = keyPair(seed)
+    const b = keyPair(seed + seed)
+    const shKey = getSharedKey(a.private, b.public)
+    const message = encryptMessage(base58encode(shKey), msg)
     
-    const data = decryptMessage(base58encode(shKey), message);
+    const data = decryptMessage(base58encode(shKey), message)
     
-    expect(data).toEqual(msg);
-});
+    expect(data).toEqual(msg)
+})
 
