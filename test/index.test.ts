@@ -58,8 +58,8 @@ test('generate shared key', () => {
 
 test('encrypt and decrypt message', () => {
   const msg = 'test message from me'
-  const a = keyPair(seed)
-  const b = keyPair(seed + seed)
+  const a = keyPair(seed + seed)
+  const b = keyPair(seed + seed + seed)
   const shKey = getSharedKey(a.private, b.public)
   const message = encryptMessage(base58encode(shKey), msg)
 
