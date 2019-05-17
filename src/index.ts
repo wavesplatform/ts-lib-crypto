@@ -223,24 +223,12 @@ export function randomUint8Array(length: number): Uint8Array {
   return secureRandom(length, { type: 'Uint8Array' })
 }
 
-
-let charToNibble: Record<string, number> = {}
-let nibbleToChar: string[] = []
-let i
-for (i = 0; i <= 9; ++i) {
-  let character = i.toString()
-  charToNibble[character] = i
-  nibbleToChar.push(character)
+const charToNibble: Record<string, number> = {
+  '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+  a: 10, A: 10, b: 11, B: 11, c: 12, C: 12, d: 13, D: 13, e: 14, E: 14, f: 15, F: 15,
 }
 
-for (i = 10; i <= 15; ++i) {
-  let lowerChar = String.fromCharCode('a'.charCodeAt(0) + i - 10)
-  let upperChar = String.fromCharCode('A'.charCodeAt(0) + i - 10)
-
-  charToNibble[lowerChar] = i
-  charToNibble[upperChar] = i
-  nibbleToChar.push(lowerChar)
-}
+const nibbleToChar: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
 
 export function byteArrayToHexString(bytes: Uint8Array) {
   let str = ''
@@ -273,20 +261,16 @@ export function getSharedKey(privateKeyFrom: string, publicKeyTo: string): Uint8
   return axlsign.sharedKey(prvk, pubk)
 }
 
-export function getKEK(sharedKey: string, prefix = 'waves') {
-  let bytesSharedKey = null
+export function getKEK(sharedKey: string, prefix = 'waves'): { KEK: CryptoJS.WordArray, P: Uint8Array } {
 
-  try {
-    bytesSharedKey = base58decode(sharedKey)
-
-    if (!bytesSharedKey || bytesSharedKey.length < 32) {
+  const decodeKey = (k: string) => {
+    const key = base58decode(k)
+    if (!key || key.length < 32)
       throw new Error('Invalid sharedKey length')
-    }
-
-  } catch (e) {
-    throw e
+    return key
   }
 
+  const bytesSharedKey = decodeKey(sharedKey)
   const P = stringToUint8Array(prefix)
 
   const KEK_Bytes = new Uint8Array(bytesSharedKey.length + P.length)
