@@ -8,7 +8,6 @@ import * as blake from './libs/blake2b'
 import { keccak256 } from './libs/sha3'
 import base58 from './libs/base58'
 import axlsign from './libs/axlsign'
-import { WordArray } from 'crypto-js'
 
 export const libs = {
   CryptoJS,
@@ -17,8 +16,6 @@ export const libs = {
   base58,
   axlsign,
 }
-
-const MIN_PASSWORD_LENGTH = 10
 
 export const concat = (...arrays: (Uint8Array | number[])[]): Uint8Array =>
   arrays.reduce((a, b) => Uint8Array.from([...a, ...b]), new Uint8Array(0)) as Uint8Array
