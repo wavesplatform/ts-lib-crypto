@@ -28,7 +28,9 @@ export function buildAddress(publicKeyBytes: Uint8Array, chainId: string = 'W'):
   return base58.encode(concat(rawAddress, addressHash))
 }
 
-export function buildSeedHash(seedBytes: Uint8Array, nonce?: number): Uint8Array {
+export function buildSeedHash(seed: Seed): Uint8Array {
+  const seedBytes = stringToUint8Array(seed.phrase);
+  const nonce = seed.nonce;
   const nonceArray = [0, 0, 0, 0]
   if (nonce && nonce > 0) {
     let remainder = nonce
@@ -111,11 +113,19 @@ export interface PrivateKey {
   private: string
 }
 
+export interface Seed {
+  phrase: string
+  nonce: number
+}
+
+export function Seed(phraseOrSeed: string | Seed, nonce: number = 0): Seed {
+  return typeof phraseOrSeed === 'string' ? { phrase: phraseOrSeed, nonce: nonce } : phraseOrSeed;
+}
+
 export type KeyPair = PublicKey & PrivateKey
 
-export const keyPair = (seed: string): KeyPair => {
-  const seedBytes = stringToUint8Array(seed)
-  const seedHash = buildSeedHash(seedBytes)
+export const keyPair = (seed: string | Seed): KeyPair => {
+  const seedHash = buildSeedHash(Seed(seed))
   const keys = axlsign.generateKeyPair(seedHash)
   return {
     private: base58.encode(keys.private),
@@ -123,19 +133,22 @@ export const keyPair = (seed: string): KeyPair => {
   }
 }
 
-export const publicKey = (seed: string): string =>
-  keyPair(seed).public
+export const publicKey = (seed: string | Seed): string =>
+  keyPair(Seed(seed)).public
 
-export const privateKey = (seed: string): string =>
-  keyPair(seed).private
+export const privateKey = (seed: string | Seed): string =>
+  keyPair(Seed(seed)).private
 
-export const address = (keyOrSeed: KeyPair | PublicKey | string, chainId: string = 'W'): string =>
-  typeof keyOrSeed === 'string' ?
-    address(keyPair(keyOrSeed), chainId) :
-    buildAddress(base58.decode(keyOrSeed.public), chainId)
+export const address = (keyOrSeed: KeyPair | PublicKey | Seed | string, chainId: string = 'W'): string => {
+  if ((typeof (keyOrSeed) === 'string') || ('phrase' in keyOrSeed)) {
+    const seed = Seed(keyOrSeed);
+    return address(keyPair(seed), chainId);
+  }
+  return buildAddress(base58.decode(keyOrSeed.public), chainId);
+}
 
-export const signBytes = (bytes: Uint8Array, seed: string): string =>
-  signWithPrivateKey(bytes, privateKey(seed))
+export const signBytes = (bytes: Uint8Array, seed: string | Seed): string =>
+  signWithPrivateKey(bytes, privateKey(Seed(seed)))
 
 export const verifySignature = (publicKey: string, bytes: Uint8Array, signature: string): boolean => {
   const signatureBytes = base58.decode(signature)
