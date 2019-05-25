@@ -61,10 +61,8 @@ test('encrypt and decrypt message', () => {
   const a = keyPair(seed + seed)
   const b = keyPair(seed + seed + seed)
   const shKey = getSharedKey(a.private, b.public)
-  const message = encryptMessage(base58encode(shKey), msg)
-
-  const data = decryptMessage(base58encode(shKey), message)
-
+  const message = encryptMessage(shKey, msg)
+  const data = decryptMessage(shKey, message)
   expect(data).toEqual(msg)
 })
 
