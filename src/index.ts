@@ -17,15 +17,19 @@ export const libs = {
   axlsign,
 }
 
-export const concat = (...arrays: (Uint8Array | number[])[]): Uint8Array =>
-  arrays.reduce((a, b) => Uint8Array.from([...a, ...b]), new Uint8Array(0)) as Uint8Array
+const isWords = (array: any): array is CryptoJS.WordArray =>
+  (<any>array).words !== undefined
+
+export const concat = (...arrays: (Uint8Array | number[] | CryptoJS.WordArray | CryptoJS.LibWordArray)[]): Uint8Array =>
+  arrays.reduce<Uint8Array>((a, b) => Uint8Array.from([...a, ...(isWords(b) ? wordArrayToByteArrayEx(b) : <any>b)]), new Uint8Array(0))
+
 
 export function buildAddress(publicKeyBytes: Uint8Array, chainId: string = 'W'): string {
   const prefix = [1, chainId.charCodeAt(0)]
   const publicKeyHashPart = hashChain(publicKeyBytes).slice(0, 20)
   const rawAddress = concat(prefix, publicKeyHashPart)
   const addressHash = Uint8Array.from(hashChain(rawAddress).slice(0, 4))
-  return base58.encode(concat(rawAddress, addressHash))
+  return base58encode(concat(rawAddress, addressHash))
 }
 
 export function buildSeedHash(seedBytes: Uint8Array, nonce?: number): Uint8Array {
@@ -67,6 +71,10 @@ function wordArrayToByteArrayEx(wordArray: any) {
 export const stringToUint8Array = (str: string) =>
   Uint8Array.from([...unescape(encodeURIComponent(str))].map(c => c.charCodeAt(0)))
 
+export const stringToUint8Array2 = (str: string) =>
+  wordArrayToByteArrayEx(CryptoJS.enc.Utf8.parse(str))
+
+
 export type PUBLIC_KEY_TYPES = string | PublicKey | Uint8Array
 export type Option<T> = T | null | undefined
 
@@ -103,6 +111,12 @@ export const base58encode = (input: Uint8Array): string =>
 export const base58decode = (input: string): Uint8Array =>
   base58.decode(input)
 
+export const base64encode = (input: Uint8Array): string =>
+  CryptoJS.enc.Base64.stringify(byteArrayToWordArrayEx(input))
+
+export const base64decode = (input: string): Uint8Array =>
+  wordArrayToByteArrayEx(CryptoJS.enc.Base64.parse(input))
+
 export interface PublicKey {
   public: string
 }
@@ -118,8 +132,8 @@ export const keyPair = (seed: string): KeyPair => {
   const seedHash = buildSeedHash(seedBytes)
   const keys = axlsign.generateKeyPair(seedHash)
   return {
-    private: base58.encode(keys.private),
-    public: base58.encode(keys.public),
+    private: base58encode(keys.private),
+    public: base58encode(keys.public),
   }
 }
 
@@ -132,16 +146,16 @@ export const privateKey = (seed: string): string =>
 export const address = (keyOrSeed: KeyPair | PublicKey | string, chainId: string = 'W'): string =>
   typeof keyOrSeed === 'string' ?
     address(keyPair(keyOrSeed), chainId) :
-    buildAddress(base58.decode(keyOrSeed.public), chainId)
+    buildAddress(base58decode(keyOrSeed.public), chainId)
 
 export const signBytes = (bytes: Uint8Array, seed: string): string =>
   signWithPrivateKey(bytes, privateKey(seed))
 
 export const verifySignature = (publicKey: string, bytes: Uint8Array, signature: string): boolean => {
-  const signatureBytes = base58.decode(signature)
+  const signatureBytes = base58decode(signature)
   return (
     signatureBytes.length == SIGNATURE_LENGTH &&
-    axlsign.verify(base58.decode(publicKey), bytes, signatureBytes)
+    axlsign.verify(base58decode(publicKey), bytes, signatureBytes)
   )
 }
 
@@ -155,12 +169,12 @@ export function arraysEqual(a: any[] | Uint8Array, b: any[] | Uint8Array): boole
   return true
 }
 
-export const hashBytes = (bytes: Uint8Array) => base58.encode(blake2b(bytes))
+export const hashBytes = (bytes: Uint8Array) => base58encode(blake2b(bytes))
 
 export const signWithPrivateKey = (dataBytes: Uint8Array, privateKey: string): string => {
-  const privateKeyBytes = base58.decode(privateKey)
+  const privateKeyBytes = base58decode(privateKey)
   const signature = axlsign.sign(privateKeyBytes, dataBytes, randomBytes(64))
-  return base58.encode(signature)
+  return base58encode(signature)
 }
 
 function nodeRandom(count: any, options: any) {
@@ -220,27 +234,15 @@ function secureRandom(count: any, options: any) {
 }
 
 export function randomBytes(size: number): Uint8Array {
-  return secureRandom(length, { type: 'Uint8Array' })
+  return secureRandom(size, { type: 'Uint8Array' })
 }
 
-
-let charToNibble: Record<string, number> = {}
-let nibbleToChar: string[] = []
-let i
-for (i = 0; i <= 9; ++i) {
-  let character = i.toString()
-  charToNibble[character] = i
-  nibbleToChar.push(character)
+const charToNibble: Record<string, number> = {
+  '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+  a: 10, A: 10, b: 11, B: 11, c: 12, C: 12, d: 13, D: 13, e: 14, E: 14, f: 15, F: 15,
 }
 
-for (i = 10; i <= 15; ++i) {
-  let lowerChar = String.fromCharCode('a'.charCodeAt(0) + i - 10)
-  let upperChar = String.fromCharCode('A'.charCodeAt(0) + i - 10)
-
-  charToNibble[lowerChar] = i
-  charToNibble[upperChar] = i
-  nibbleToChar.push(lowerChar)
-}
+const nibbleToChar: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
 
 export function byteArrayToHexString(bytes: Uint8Array) {
   let str = ''
@@ -267,76 +269,67 @@ export function hexStringToByteArray(str: string) {
   return bytes
 }
 
-export function getSharedKey(privateKeyFrom: string, publicKeyTo: string): string {
-  const prvk = base58decode(privateKeyFrom)
-  const pubk = base58decode(publicKeyTo)
-  return base58encode(axlsign.sharedKey(prvk, pubk))
+export function sharedKey(privateKeyFrom: string, publicKeyTo: string): string {
+  return base58encode(sha256(axlsign.sharedKey(base58decode(privateKeyFrom), base58decode(publicKeyTo))))
 }
 
 export function getKEK(sharedKey: string, prefix: string) {
-  let bytesSharedKey = null
 
-  try {
-    bytesSharedKey = base58decode(sharedKey)
-
-    if (!bytesSharedKey || bytesSharedKey.length < 32) {
+  const decodeKey = (k: string) => {
+    const key = base58decode(k)
+    if (!key || key.length < 32)
       throw new Error('Invalid sharedKey length')
-    }
-
-  } catch (e) {
-    throw e
+    return key
   }
 
+  const bytesSharedKey = decodeKey(sharedKey)
   const P = stringToUint8Array(prefix)
   const KEK_Bytes = bytesSharedKey.map((byte, index) => byte | P[index % P.length])
-  return base58encode(wordArrayToByteArrayEx(CryptoJS.SHA256(byteArrayToWordArrayEx(KEK_Bytes))))
+  return base58encode(sha256(KEK_Bytes))
 }
 
-export function encryptMessage(sharedKey: string, message: string, prefix = 'waves') {
-  const KEK = base58decode(getKEK(sharedKey, prefix))
-  const KEK_AS_WORD = byteArrayToWordArrayEx(KEK)
-  const P = stringToUint8Array(prefix)
+export function encryptMessage(sharedKey: string, message: string) {
+  const KEK_AS_WORD = byteArrayToWordArrayEx(base58decode(sharedKey))
+  const P = stringToUint8Array('waves')
   const M = CryptoJS.enc.Utf8.parse(message)
   const CEK_Bytes = randomBytes(32)
   const CEK = byteArrayToWordArrayEx(CEK_Bytes)
   const IV_Bytes = randomBytes(16)
+  CryptoJS.lib.WordArray.random(16)
 
   const CEK_FOR_HMAC = CEK_Bytes.map((byte, index) => byte | P[index % P.length])
   const Cc = CryptoJS.AES.encrypt(M, CEK, {
     iv: byteArrayToWordArrayEx(IV_Bytes),
     mode: CryptoJS.mode.CTR,
   })
+
   const C = CryptoJS.enc.Base64.parse(Cc.toString())
 
   const Mhmac = CryptoJS.HmacSHA256(M, CEK)
   const Ccek = CryptoJS.enc.Base64.parse(CryptoJS.AES.encrypt(CEK, KEK_AS_WORD, { mode: CryptoJS.mode.ECB }).toString())
   const CEKhmac = CryptoJS.HmacSHA256(byteArrayToWordArrayEx(CEK_FOR_HMAC), KEK_AS_WORD)
 
-  const CcekBytes = wordArrayToByteArrayEx(Ccek)
-  const CEKhmacBytes = wordArrayToByteArrayEx(CEKhmac)
-  const CBytes = wordArrayToByteArrayEx(C)
-  const MhmacBytes = wordArrayToByteArrayEx(Mhmac)
+  const packageBytes = concat(
+    Ccek,
+    CEKhmac,
+    C,
+    Mhmac,
+    IV_Bytes
+  )
 
-
-  const packageBytes = new Uint8Array(CcekBytes.length + CEKhmacBytes.length + CBytes.length + MhmacBytes.length + IV_Bytes.length)
-  packageBytes.set(CcekBytes)
-  packageBytes.set(CEKhmacBytes, CcekBytes.length)
-  packageBytes.set(CBytes, CcekBytes.length + CEKhmacBytes.length)
-  packageBytes.set(MhmacBytes, CcekBytes.length + CEKhmacBytes.length + CBytes.length)
-  packageBytes.set(IV_Bytes, CcekBytes.length + CEKhmacBytes.length + CBytes.length + MhmacBytes.length)
   return CryptoJS.enc.Base64.stringify(byteArrayToWordArrayEx(packageBytes))
 }
 
-export function decryptMessage(sharedKey: string, encryptedMessage: string, prefix = 'waves') {
-  const KEK = base58decode(getKEK(sharedKey, prefix))
-  const KEK_AS_WORD = byteArrayToWordArrayEx(KEK)
-  const P = stringToUint8Array(prefix)
+export function decryptMessage(sharedKey: string, encryptedMessage: string) {
+  const KEK_AS_WORD = byteArrayToWordArrayEx(base58decode(sharedKey))
+  const P = stringToUint8Array('waves')
   const packageBytes = wordArrayToByteArrayEx(CryptoJS.enc.Base64.parse(encryptedMessage))
   const IV_Bytes = packageBytes.slice(-16)
   const MhmacBytes = packageBytes.slice(-(16 + 32), -16)
   const CcekBytes = packageBytes.slice(0, 48)
   const CEKhmacBytes = packageBytes.slice(48, 48 + 32)
   const CBytes = packageBytes.slice(48 + 32, -(16 + 32))
+
 
   const CEK = byteArrayToWordArrayEx(wordArrayToByteArrayEx(CryptoJS.AES.decrypt(
     CryptoJS.enc.Base64.stringify(byteArrayToWordArrayEx(CcekBytes)),
