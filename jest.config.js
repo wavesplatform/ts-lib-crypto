@@ -7,7 +7,7 @@ module.exports = {
     transform: {
         "^.+\\.(ts|tsx)?$": "ts-jest"
     },
-    collectCoverage: false && true,
+    collectCoverage: true,
     coverageReporters: [
         "json-summary",
         "text",

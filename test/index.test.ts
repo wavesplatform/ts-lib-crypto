@@ -7,10 +7,13 @@ import {
   verifySignature,
   base58encode,
   base58decode,
-  getSharedKey,
+  sharedKey,
   encryptMessage,
   decryptMessage,
+  stringToUint8Array,
+  stringToUint8Array2,
 } from '../src'
+
 
 const seed = '1f98af466da54014bdc08bfbaaaf3c67'
 
@@ -51,8 +54,8 @@ test('base58 roundtrip', () => {
 test('generate shared key', () => {
   const a = keyPair(seed)
   const b = keyPair(seed + seed)
-  const shKey = getSharedKey(a.private, b.public)
-  const shKey2 = getSharedKey(b.private, a.public)
+  const shKey = sharedKey(a.private, b.public)
+  const shKey2 = sharedKey(b.private, a.public)
   expect(shKey.toString()).toEqual(shKey2.toString())
 })
 
@@ -60,11 +63,8 @@ test('encrypt and decrypt message', () => {
   const msg = 'test message from me'
   const a = keyPair(seed + seed)
   const b = keyPair(seed + seed + seed)
-  const shKey = getSharedKey(a.private, b.public)
-  const message = encryptMessage(base58encode(shKey), msg)
-
-  const data = decryptMessage(base58encode(shKey), message)
-
+  const shKey = sharedKey(a.private, b.public)
+  const message = encryptMessage(shKey, msg)
+  const data = decryptMessage(shKey, message)
   expect(data).toEqual(msg)
 })
-
