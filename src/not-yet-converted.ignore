@@ -1,0 +1,147 @@
+
+
+export const ADDRESS_LENGTH = 26
+export const PUBLIC_KEY_LENGTH = 32
+export const PRIVATE_KEY_LENGTH = 32
+export const SIGNATURE_LENGTH = 64
+
+
+const charToNibble: Record<string, number> = {
+  '0': 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9,
+  a: 10, A: 10, b: 11, B: 11, c: 12, C: 12, d: 13, D: 13, e: 14, E: 14, f: 15, F: 15,
+}
+
+const nibbleToChar: string[] = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f']
+
+export function byteArrayToHexString(bytes: Uint8Array) {
+  let str = ''
+  for (let i = 0; i < bytes.length; ++i) {
+    if (bytes[i] < 0) {
+      bytes[i] += 256
+    }
+    str += nibbleToChar[bytes[i] >> 4] + nibbleToChar[bytes[i] & 0x0F]
+  }
+  return str
+}
+
+export function hexStringToByteArray(str: string) {
+  let bytes = []
+  let i = 0
+  if (0 !== str.length % 2) {
+    bytes.push(charToNibble[str.charAt(0)])
+    ++i
+  }
+
+  for (; i < str.length - 1; i += 2)
+    bytes.push((charToNibble[str.charAt(i)] << 4) + charToNibble[str.charAt(i + 1)])
+
+  return bytes
+}
+
+export function getSharedKey(privateKeyFrom: string, publicKeyTo: string): Uint8Array {
+  const prvk = base58decode(privateKeyFrom)
+  const pubk = base58decode(publicKeyTo)
+  return axlsign.sharedKey(prvk, pubk)
+}
+
+export function getKEK(sharedKey: string, prefix = 'waves'): { KEK: CryptoJS.WordArray, P: Uint8Array } {
+
+  const decodeKey = (k: string) => {
+    const key = base58decode(k)
+    if (!key || key.length < 32)
+      throw new Error('Invalid sharedKey length')
+    return key
+  }
+
+  const bytesSharedKey = decodeKey(sharedKey)
+  const P = stringToBytes(prefix)
+
+  const KEK_Bytes = new Uint8Array(bytesSharedKey.length + P.length)
+  KEK_Bytes.set(bytesSharedKey)
+  KEK_Bytes.set(P, bytesSharedKey.length)
+
+  const KEK = CryptoJS.SHA256(byteArrayToWordArrayEx(KEK_Bytes))
+
+  return {
+    KEK,
+    P,
+  }
+}
+
+export function encryptMessage(sharedKey: string, message: string, prefix = 'waves') {
+  const { KEK, P } = getKEK(sharedKey, prefix)
+  const M = CryptoJS.enc.Utf8.parse(message)
+  const CEK_Bytes = randomUint8Array(32)
+  const CEK = byteArrayToWordArrayEx(CEK_Bytes)
+  const IV_Bytes = randomUint8Array(16)
+
+  const CEK_FOR_HMAC = CEK_Bytes.map((byte, index) => byte | P[index % P.length])
+  const Cc = CryptoJS.AES.encrypt(M, CEK, {
+    iv: byteArrayToWordArrayEx(IV_Bytes),
+    mode: CryptoJS.mode.CTR,
+  })
+  const C = CryptoJS.enc.Base64.parse(Cc.toString())
+
+  const Mhmac = CryptoJS.HmacSHA256(M, CEK)
+  const Ccek = CryptoJS.enc.Base64.parse(CryptoJS.AES.encrypt(CEK, KEK, { mode: CryptoJS.mode.ECB }).toString())
+  const CEKhmac = CryptoJS.HmacSHA256(byteArrayToWordArrayEx(CEK_FOR_HMAC), KEK)
+
+  const CcekBytes = wordArrayToByteArrayEx(Ccek)
+  const CEKhmacBytes = wordArrayToByteArrayEx(CEKhmac)
+  const CBytes = wordArrayToByteArrayEx(C)
+  const MhmacBytes = wordArrayToByteArrayEx(Mhmac)
+
+
+  const packageBytes = new Uint8Array(CcekBytes.length + CEKhmacBytes.length + CBytes.length + MhmacBytes.length + IV_Bytes.length)
+  packageBytes.set(CcekBytes)
+  packageBytes.set(CEKhmacBytes, CcekBytes.length)
+  packageBytes.set(CBytes, CcekBytes.length + CEKhmacBytes.length)
+  packageBytes.set(MhmacBytes, CcekBytes.length + CEKhmacBytes.length + CBytes.length)
+  packageBytes.set(IV_Bytes, CcekBytes.length + CEKhmacBytes.length + CBytes.length + MhmacBytes.length)
+
+  return CryptoJS.enc.Base64.stringify(byteArrayToWordArrayEx(packageBytes))
+}
+
+export function decryptMessage(sharedKey: string, encryptedMessage: string, prefix = 'waves') {
+  const { KEK, P } = getKEK(sharedKey, prefix)
+
+  const packageBytes = wordArrayToByteArrayEx(CryptoJS.enc.Base64.parse(encryptedMessage))
+  const IV_Bytes = packageBytes.slice(-16)
+  const MhmacBytes = packageBytes.slice(-(16 + 32), -16)
+  const CcekBytes = packageBytes.slice(0, 48)
+  const CEKhmacBytes = packageBytes.slice(48, 48 + 32)
+  const CBytes = packageBytes.slice(48 + 32, -(16 + 32))
+
+  const CEK = byteArrayToWordArrayEx(wordArrayToByteArrayEx(CryptoJS.AES.decrypt(
+    CryptoJS.enc.Base64.stringify(byteArrayToWordArrayEx(CcekBytes)),
+    KEK,
+    { mode: CryptoJS.mode.ECB }
+  )))
+
+  const CEK_FOR_HMAC = wordArrayToByteArrayEx(CEK).map((byte, index) => byte | P[index % P.length])
+  const CEKhmac = wordArrayToByteArrayEx(CryptoJS.HmacSHA256(byteArrayToWordArrayEx(CEK_FOR_HMAC), KEK))
+
+  const isValidKey = CEKhmac.every((v, i) => v === CEKhmacBytes[i])
+
+  if (!isValidKey) {
+    throw new Error('Invalid message')
+  }
+
+  const M = CryptoJS.AES.decrypt(
+    CryptoJS.enc.Base64.stringify(byteArrayToWordArrayEx(CBytes)),
+    CEK,
+    {
+      iv: byteArrayToWordArrayEx(IV_Bytes),
+      mode: CryptoJS.mode.CTR,
+    })
+
+  const Mhmac = wordArrayToByteArrayEx(CryptoJS.HmacSHA256(byteArrayToWordArrayEx(wordArrayToByteArrayEx(M)), CEK))
+
+  const isValidMessage = Mhmac.every((v, i) => v === MhmacBytes[i])
+
+  if (!isValidMessage) {
+    throw new Error('Invalid message')
+  }
+
+  return M.toString(CryptoJS.enc.Utf8)
+}

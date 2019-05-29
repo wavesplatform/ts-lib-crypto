@@ -1,70 +1,115 @@
-import {
-  address,
-  keyPair,
-  publicKey,
-  privateKey,
-  signBytes,
-  verifySignature,
-  base58encode,
-  base58decode,
-  getSharedKey,
-  encryptMessage,
-  decryptMessage,
-} from '../src'
+import { crypto, output, MAIN_NET_CHAIN_ID } from '../src/index'
 
-const seed = '1f98af466da54014bdc08bfbaaaf3c67'
+const { seed, address, randomBytes, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode } = crypto({ output: output.Base58 })
+
+const s = '1f98af466da54014bdc08bfbaaaf3c67'
+
+test('address from seed with nonce', () => {
+  const n1 = address(seed(s, 1))
+  const n2 = address(seed(s, 2))
+  const n3 = address(seed(s, 3))
+
+  expect(n1).toBe('3PMGVGocJt176sS1i6z3n7Xwot7w8hhqSU7')
+  expect(n2).toBe('3P2BDW7MvwxhekbpStoF3byXtqiJnSByuTa')
+  expect(n3).toBe('3PAXLcTewsV9eZHc8JJBYFmCenEJKZYYKGL')
+})
 
 test('address', () =>
-  expect(address(seed)).toBe('3PKjdoVXMT96VEP8YAZRy4jKKA5GkjovboD')
+  expect(address(s)).toBe('3PKjdoVXMT96VEP8YAZRy4jKKA5GkjovboD')
 )
 
+test('verify address', () => {
+  const a = address(s, MAIN_NET_CHAIN_ID)
+  expect(verifyAddress(a)).toBe(true)
+  expect(verifyAddress(a, { chainId: MAIN_NET_CHAIN_ID })).toBe(true)
+  expect(verifyAddress(a, { publicKey: publicKey(s) })).toBe(true)
+})
+
 test('keyPair', () =>
-  expect(keyPair(seed)).toEqual({
-    public: '12wYe4Y5Z5uJXRQw44huYYszidfMfFbwhjyVTparH1wT',
-    private: 'AAJPFvUtBgSMWbDQgCJUxzXmYeggKgn8a4LEMGaoWEMj',
+  expect(keyPair(s)).toEqual({
+    publicKey: '12wYe4Y5Z5uJXRQw44huYYszidfMfFbwhjyVTparH1wT',
+    privateKey: 'AAJPFvUtBgSMWbDQgCJUxzXmYeggKgn8a4LEMGaoWEMj',
   })
 )
 
 test('publicKey', () =>
-  expect(publicKey(seed)).toBe('12wYe4Y5Z5uJXRQw44huYYszidfMfFbwhjyVTparH1wT')
+  expect(publicKey(s)).toBe('12wYe4Y5Z5uJXRQw44huYYszidfMfFbwhjyVTparH1wT')
 )
 
 test('privateKey', () =>
-  expect(privateKey(seed)).toBe('AAJPFvUtBgSMWbDQgCJUxzXmYeggKgn8a4LEMGaoWEMj')
+  expect(privateKey(s)).toBe('AAJPFvUtBgSMWbDQgCJUxzXmYeggKgn8a4LEMGaoWEMj')
 )
 
 test('signature roundtrip', () => {
   const bytes = Uint8Array.from([1, 2, 3, 4])
-  const sig = signBytes(bytes, seed)
-  const valid = verifySignature(publicKey(seed), bytes, sig)
-  const invalid = verifySignature(publicKey(seed), Uint8Array.from([4, 3, 2, 1]), sig)
+  const sig = signBytes(bytes, s)
+  const valid = verifySignature(publicKey(s), bytes, sig)
+  const invalid = verifySignature(publicKey(s), Uint8Array.from([4, 3, 2, 1]), sig)
   expect(valid).toBe(true)
   expect(invalid).toBe(false)
 })
 
+test('base16 roundtrip', () => {
+  const base16 = '1f3b047576'
+  const result = base16Encode(base16Decode(base16))
+  expect(result).toEqual(base16)
+})
+
 test('base58 roundtrip', () => {
   const base58 = '5k1XmKDYbpxqAN'
-  const result = base58encode(base58decode(base58))
+  const result = base58Encode(base58Decode(base58))
   expect(result).toEqual(base58)
 })
 
-test('generate shared key', () => {
-  const a = keyPair(seed)
-  const b = keyPair(seed + seed)
-  const shKey = getSharedKey(a.private, b.public)
-  const shKey2 = getSharedKey(b.private, a.public)
-  expect(shKey.toString()).toEqual(shKey2.toString())
+test('base64 roundtrip', () => {
+  const base64 = 'd2F2ZXM='
+  const result = base64Encode(base64Decode(base64))
+  expect(result).toEqual(base64)
 })
 
-test('encrypt and decrypt message', () => {
-  const msg = 'test message from me'
-  const a = keyPair(seed + seed)
-  const b = keyPair(seed + seed + seed)
-  const shKey = getSharedKey(a.private, b.public)
-  const message = encryptMessage(base58encode(shKey), msg)
-
-  const data = decryptMessage(base58encode(shKey), message)
-
-  expect(data).toEqual(msg)
+test('base58 to base64', () => {
+  const wavesBytes = stringToBytes('waves')
+  const base58 = base58Encode(wavesBytes)
+  const base64 = base64Encode(base58) //you can use base58 string as an binary input
+  expect(base64Decode(base64)).toEqual(wavesBytes)
 })
+
+test('foo', () => {
+  const {
+    publicKey: publicKeyBytes,
+    address: addressBytes,
+    signBytes: signBytesBytes,
+    keyPair: keyPairBytes,
+  } = crypto()
+
+  const message = [1, 2, 3]
+  const random = randomBytes(64)
+
+  expect(base58Encode(publicKeyBytes(s))).toBe(publicKey(s))
+  expect(base58Encode(addressBytes(s))).toBe(address(s))
+  expect(base58Encode(signBytesBytes(message, s, random))).toBe(signBytes(message, s, random))
+  expect(base58Encode(keyPairBytes(s).privateKey)).toBe(keyPair(s).privateKey)
+})
+
+
+
+// test('generate shared key', () => {
+//   const a = keyPair(seed)
+//   const b = keyPair(seed + seed)
+//   const shKey = getSharedKey(a.private, b.public)
+//   const shKey2 = getSharedKey(b.private, a.public)
+//   expect(shKey.toString()).toEqual(shKey2.toString())
+// })
+
+// test('encrypt and decrypt message', () => {
+//   const msg = 'test message from me'
+//   const a = keyPair(seed + seed)
+//   const b = keyPair(seed + seed + seed)
+//   const shKey = getSharedKey(a.private, b.public)
+//   const message = encryptMessage(base58encode(shKey), msg)
+
+//   const data = decryptMessage(base58encode(shKey), message)
+
+//   expect(data).toEqual(msg)
+// })
 
