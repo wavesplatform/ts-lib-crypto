@@ -1,6 +1,6 @@
 import { crypto, output, MAIN_NET_CHAIN_ID } from '../src/index'
 
-const { seed, address, randomBytes, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode } = crypto({ output: output.Base58 })
+const { seed, address, sharedKey, messageEncrypt, messageDecrypt, randomBytes, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode } = crypto({ output: output.Base58 })
 
 const s = '1f98af466da54014bdc08bfbaaaf3c67'
 
@@ -74,7 +74,7 @@ test('base58 to base64', () => {
   expect(base64Decode(base64)).toEqual(wavesBytes)
 })
 
-test('foo', () => {
+test('output equality', () => {
   const {
     publicKey: publicKeyBytes,
     address: addressBytes,
@@ -91,25 +91,23 @@ test('foo', () => {
   expect(base58Encode(keyPairBytes(s).privateKey)).toBe(keyPair(s).privateKey)
 })
 
+test('generate shared key', () => {
+  const a = keyPair(s)
+  const b = keyPair(s + s)
+  const sharedKeyA = sharedKey(a.privateKey, b.publicKey, 'waves')
+  const sharedKeyB = sharedKey(b.privateKey, a.publicKey, 'waves')
+  expect(sharedKeyA).toEqual(sharedKeyB)
+})
 
+test('encrypt and decrypt message roundtrip', () => {
+  const originalMessage = 'Waves is awesome!'
+  const prefix = 'waves'
 
-// test('generate shared key', () => {
-//   const a = keyPair(seed)
-//   const b = keyPair(seed + seed)
-//   const shKey = getSharedKey(a.private, b.public)
-//   const shKey2 = getSharedKey(b.private, a.public)
-//   expect(shKey.toString()).toEqual(shKey2.toString())
-// })
+  const a = keyPair(s)
+  const b = keyPair(s + s)
+  const sk = sharedKey(a.privateKey, b.publicKey, prefix)
+  const encryptedMessage = messageEncrypt(sk, originalMessage, prefix)
+  const message = messageDecrypt(sk, encryptedMessage, prefix)
 
-// test('encrypt and decrypt message', () => {
-//   const msg = 'test message from me'
-//   const a = keyPair(seed + seed)
-//   const b = keyPair(seed + seed + seed)
-//   const shKey = getSharedKey(a.private, b.public)
-//   const message = encryptMessage(base58encode(shKey), msg)
-
-//   const data = decryptMessage(base58encode(shKey), message)
-
-//   expect(data).toEqual(msg)
-// })
-
+  expect(message).toEqual(originalMessage)
+})

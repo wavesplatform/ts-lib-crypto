@@ -26,6 +26,8 @@ export type TChainId = string | number
 //So almost every binary parameter could be represented as Uint8Array or number[] or base58 string
 export type TBinaryIn = TBytes | TBase58 | number[]
 
+export type TRawIn = TBytes | string | number[]
+
 export type TBinaryOut = TBytes | TBase58
 
 //TPublicKey is a BASE58 string representation of a public key.
@@ -63,7 +65,9 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut> {
   base16Encode: (input: TBinaryIn) => TBase16
   base16Decode: (input: TBase16) => TBytes //throws (invalid input)
 
+  //Utils
   stringToBytes: (input: string) => TBytes
+  split: (binary: TBinaryIn, ...sizes: number[]) => TBytes[]
 
   //Keys, seeds and addresses
   keyPair: (seed: TSeed) => TKeyPair<TDesiredOut>
@@ -84,9 +88,14 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut> {
   verifyAddress: (address: TBinaryIn, optional?: { chainId?: TChainId, publicKey?: TBinaryIn }) => boolean
 
   //TODO Messaging
-  //sharedKey: (privateKeyFrom: TKey, publicKeyTo: TKey) => TKey
-  //messageDecrypt: (sharedKey: TKey, encryptedMessage: TBase58) => string
-  //messageEncrypt: (sharedKey: TKey, message: string) => TBase58
+  sharedKey: (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TBinaryIn) => TDesiredOut
+  messageDecrypt: (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn, prefix: TBinaryIn) => string
+  messageEncrypt: (sharedKey: TBinaryIn, message: TRawIn, prefix: TBinaryIn) => TDesiredOut
+
+  //sharedKey: (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TRawIn) => TDesiredOut
+  //messageDecrypt: (sharedKey: TBase58, encryptedMessage: TBase64, prefix: TRawIn) => TDesiredOut
+  //messageEncrypt: (sharedKey: TBase58, message: string, prefix: string) => string
+
 
 }
 
