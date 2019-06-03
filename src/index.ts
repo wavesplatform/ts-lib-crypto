@@ -8,7 +8,7 @@ import * as blake from './libs/blake2b'
 import { keccak256 } from './libs/sha3'
 import base58 from './libs/base58'
 import axlsign from './libs/axlsign'
-import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawIn } from './crypto'
+import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn } from './crypto'
 export { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey } from './crypto'
 import { secureRandom } from './random'
 
@@ -152,6 +152,9 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
   const stringToBytes = (str: string): TBytes =>
     Uint8Array.from([...unescape(encodeURIComponent(str))].map(c => c.charCodeAt(0)))
 
+  const bytesToString = (bytes: TBinaryIn): string =>
+    String.fromCharCode.apply(null, Array.from(fromIn(bytes)))
+
   const buildSeedHash = (seedBytes: Uint8Array, nonce?: number): Uint8Array => {
     const nonceArray = [0, 0, 0, 0]
     if (nonce && nonce > 0) {
@@ -278,13 +281,13 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
   const hmacSHA256 = (message: TBinaryIn, key: TBinaryIn): T =>
     toOut(wordArrayToByteArrayEx(CryptoJS.HmacSHA256(byteArrayToWordArrayEx(fromIn(message)), byteArrayToWordArrayEx(fromIn(key)))))
 
-  const sharedKey = (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TRawIn): T => {
+  const sharedKey = (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TRawStringIn): T => {
     const sharedKey = axlsign.sharedKey(fromIn(privateKeyFrom), fromIn(publicKeyTo))
     const prefixHash = sha256(fromRawIn(prefix))
     return hmacSHA256(sharedKey, prefixHash)
   }
 
-  const messageEncrypt = (sharedKey: TBinaryIn, message: TRawIn, prefix: TRawIn): T => {
+  const messageEncrypt = (sharedKey: TBinaryIn, message: TRawStringIn, prefix: TRawStringIn): T => {
     const KEK = fromIn(sharedKey)
     const CEK = randomBytes(32)
     const IV = randomBytes(16)
@@ -309,7 +312,7 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
     return toOut(packageBytes)
   }
 
-  const messageDecrypt = (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn, prefix: TRawIn): string => {
+  const messageDecrypt = (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn, prefix: TRawStringIn): string => {
     const P = fromRawIn(prefix)
 
     const [
@@ -351,6 +354,7 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
     base16Encode,
     base16Decode,
     stringToBytes,
+    bytesToString,
     keyPair,
     publicKey,
     privateKey,

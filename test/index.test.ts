@@ -1,6 +1,6 @@
 import { crypto, output, MAIN_NET_CHAIN_ID } from '../src/index'
 
-const { seed, address, sharedKey, messageEncrypt, messageDecrypt, randomBytes, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode } = crypto({ output: output.Base58 })
+const { seed, address, sharedKey, messageEncrypt, messageDecrypt, randomBytes, bytesToString, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode } = crypto({ output: output.Base58 })
 
 const s = '1f98af466da54014bdc08bfbaaaf3c67'
 
@@ -47,6 +47,12 @@ test('signature roundtrip', () => {
   const invalid = verifySignature(publicKey(s), Uint8Array.from([4, 3, 2, 1]), sig)
   expect(valid).toBe(true)
   expect(invalid).toBe(false)
+})
+
+test('string/bytes roundtrip', () => {
+  const initialString = 'waves'
+  const bytes = stringToBytes(initialString)
+  expect(bytesToString(bytes)).toBe(initialString)
 })
 
 test('base16 roundtrip', () => {

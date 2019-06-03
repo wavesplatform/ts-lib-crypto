@@ -23,10 +23,11 @@ export type TBase16 = string //Same as HEX
 
 export type TChainId = string | number
 
-//So almost every binary parameter could be represented as Uint8Array or number[] or base58 string
+//Every binary parameter could be represented as Uint8Array or number[] or base58 string
 export type TBinaryIn = TBytes | TBase58 | number[]
 
-export type TRawIn = TBytes | string | number[]
+//Every input stinrg could be represented as Uint8Array or number[] or a string itself
+export type TRawStringIn = TBytes | string | number[]
 
 export type TBinaryOut = TBytes | TBase58
 
@@ -39,7 +40,7 @@ export type TPrivateKey<T extends TBinaryIn = TBytes> = { privateKey: T }
 export type TKeyPair<T extends TBinaryIn = TBytes> = TPublicKey<T> & TPrivateKey<T>
 
 //TSeed is a union of types that could represent a Waves seed.
-export type TSeed = string | TBinaryIn | ISeedWithNonce
+export type TSeed = TRawStringIn | ISeedWithNonce
 
 /* Consider that every method should handle TSeed
    seamlessly so in case of absence of type union operator
@@ -67,6 +68,7 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut> {
 
   //Utils
   stringToBytes: (input: string) => TBytes
+  bytesToString: (input: TBinaryIn) => string
   split: (binary: TBinaryIn, ...sizes: number[]) => TBytes[]
 
   //Keys, seeds and addresses
@@ -88,15 +90,9 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut> {
   verifyAddress: (address: TBinaryIn, optional?: { chainId?: TChainId, publicKey?: TBinaryIn }) => boolean
 
   //TODO Messaging
-  sharedKey: (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TBinaryIn) => TDesiredOut
-  messageDecrypt: (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn, prefix: TBinaryIn) => string
-  messageEncrypt: (sharedKey: TBinaryIn, message: TRawIn, prefix: TBinaryIn) => TDesiredOut
-
-  //sharedKey: (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TRawIn) => TDesiredOut
-  //messageDecrypt: (sharedKey: TBase58, encryptedMessage: TBase64, prefix: TRawIn) => TDesiredOut
-  //messageEncrypt: (sharedKey: TBase58, message: string, prefix: string) => string
-
-
+  sharedKey: (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TRawStringIn) => TDesiredOut
+  messageDecrypt: (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn, prefix: TRawStringIn) => string
+  messageEncrypt: (sharedKey: TBinaryIn, message: TRawStringIn, prefix: TRawStringIn) => TDesiredOut
 }
 
 
