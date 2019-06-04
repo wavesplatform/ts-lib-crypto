@@ -208,7 +208,7 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
     return split(randomBytes(wordsCount * 4), ...new Array(wordsCount).fill(4))
       .map(r => r[0] << 8 * 3 | r[1] << 8 * 2 | r[2] << 8 | r[3])
       .slice(0, -1)
-      .map(Math.abs)
+      .map(x => x * x)
       .map(x => words[x % words.length]).join(' ')
   }
 
@@ -378,3 +378,6 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
     concat,
   }
 }
+
+
+
