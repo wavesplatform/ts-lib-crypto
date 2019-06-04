@@ -7,7 +7,7 @@
     "build_native": "tsc; cp src/libs/*.d.ts dist/libs;cp src/libs/*.js dist/libs",
     "build": "ts-node build/build.ts cp src/libs/*.d.ts dist/libs;cp src/libs/*.js dist/libs",
     "build2": "webpack --config webpack.config.js --env",
-    "prepublishOnly": "npm run test;npm run build",
+    "deploy": "cd dist; npm publish;",
     "fix-style": "tslint --fix -c tslint.json '{src,test,usage}/**/*{.ts,.tsx}'",
     "test": "jest"
   },

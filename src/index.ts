@@ -11,6 +11,7 @@ import axlsign from './libs/axlsign'
 import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn } from './crypto'
 export { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey } from './crypto'
 import { secureRandom } from './random'
+import { words } from './words'
 
 export const output = {
   Bytes: Uint8Array.from([]),
@@ -202,8 +203,13 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
   const randomBytes = (length: number): TBytes =>
     secureRandom(length, { type: 'Uint8Array' })
 
-  const randomSeed = (): T => {
-    return _toOut(Uint8Array.from([]))
+  const randomSeed = (): string => {
+    const wordsCount = 15
+    return split(randomBytes(wordsCount * 4), ...new Array(wordsCount).fill(4))
+      .map(r => r[0] << 8 * 3 | r[1] << 8 * 2 | r[2] << 8 | r[3])
+      .slice(0, -1)
+      .map(x => x * x)
+      .map(x => words[x % words.length]).join(' ')
   }
 
   const signBytes = (bytes: TBinaryIn, seedOrPrivateKey: TSeed | TPrivateKey<TBinaryIn>, random?: TBinaryIn): T =>
@@ -372,3 +378,6 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
     concat,
   }
 }
+
+
+
