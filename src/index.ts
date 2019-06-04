@@ -1,8 +1,3 @@
-// Copyright (c) 2018 Yuriy Naydenov
-//
-// This software is released under the MIT License.
-// https://opensource.org/licenses/MIT
-
 import * as CryptoJS from 'crypto-js'
 import * as blake from './libs/blake2b'
 import { keccak256 } from './libs/sha3'
@@ -60,7 +55,7 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
   const chainIdToNumber = (chainId: TChainId): number =>
     typeof chainId === 'string' ? chainId.charCodeAt(0) : chainId
 
-  const hashChain = (input: TBytes): TBytes =>
+  const _hashChain = (input: TBytes): TBytes =>
     _fromIn(keccak(blake2b(input)))
 
   const _toWords = (arr: Uint8Array) => {
@@ -166,7 +161,7 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
       }
     }
     const seedBytesWithNonce = _concat(nonceArray, seedBytes)
-    const seedHash = hashChain(seedBytesWithNonce)
+    const seedHash = _hashChain(seedBytesWithNonce)
     return _fromIn(sha256(seedHash))
   }
 
@@ -189,9 +184,9 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
 
   const buildAddress = (publicKeyBytes: TBytes, chainId: TChainId = MAIN_NET_CHAIN_ID): T => {
     const prefix = [1, typeof chainId === 'string' ? chainId.charCodeAt(0) : chainId]
-    const publicKeyHashPart = hashChain(publicKeyBytes).slice(0, 20)
+    const publicKeyHashPart = _hashChain(publicKeyBytes).slice(0, 20)
     const rawAddress = _concat(prefix, publicKeyHashPart)
-    const addressHash = hashChain(rawAddress).slice(0, 4)
+    const addressHash = _hashChain(rawAddress).slice(0, 4)
     return _toOut(_concat(rawAddress, addressHash))
   }
 
@@ -203,14 +198,11 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
   const randomBytes = (length: number): TBytes =>
     secureRandom(length, { type: 'Uint8Array' })
 
-  const randomSeed = (): string => {
-    const wordsCount = 15
-    return split(randomBytes(wordsCount * 4), ...new Array(wordsCount).fill(4))
-      .map(r => r[0] << 8 * 3 | r[1] << 8 * 2 | r[2] << 8 | r[3])
-      .slice(0, -1)
-      .map(x => x * x)
-      .map(x => words[x % words.length]).join(' ')
-  }
+  const randomSeed = (wordsCount: number = 15): string =>
+    Array.from(new Uint32Array(wordsCount)
+      .map(_ => randomBytes(4).reduce((a, b, i) => a | b << 8 * (3 - i), 0)))
+      .map(x => words[x % words.length])
+      .join(' ')
 
   const signBytes = (bytes: TBinaryIn, seedOrPrivateKey: TSeed | TPrivateKey<TBinaryIn>, random?: TBinaryIn): T =>
     _toOut(
@@ -242,7 +234,7 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
 
       const key = addressBytes.slice(0, 22)
       const check = addressBytes.slice(22, 26)
-      const keyHash = hashChain(key).slice(0, 4)
+      const keyHash = _hashChain(key).slice(0, 4)
 
       for (let i = 0; i < 4; i++) {
         if (check[i] != keyHash[i])
