@@ -80,7 +80,7 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut> {
 
   //Random
   randomBytes: (size: number) => TBytes
-  randomSeed: () => TDesiredOut
+  randomSeed: () => string
 
   //Bytes hashing and signing
   signBytes: (bytes: TBinaryIn, seedOrPrivateKey: TSeed | TPrivateKey<TBinaryIn>, random?: TBinaryIn) => TDesiredOut
