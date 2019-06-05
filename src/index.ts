@@ -196,11 +196,10 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
       address(keyPair(seedOrPublicKey), chainId)
 
   const randomBytes = (length: number): TBytes =>
-    secureRandom(length, { type: 'Uint8Array' })
+    secureRandom(length, 'Uint8Array')
 
   const randomSeed = (wordsCount: number = 15): string =>
-    Array.from(new Uint32Array(wordsCount)
-      .map(_ => randomBytes(4).reduce((a, b, i) => a | b << 8 * (3 - i), 0)))
+    secureRandom(wordsCount, 'Array32')
       .map(x => words[x % words.length])
       .join(' ')
 
