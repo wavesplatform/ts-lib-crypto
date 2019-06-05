@@ -4,9 +4,13 @@ import { keccak256 } from './libs/sha3'
 import base58 from './libs/base58'
 import axlsign from './libs/axlsign'
 import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded } from './crypto'
-export { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded } from './crypto'
 import { secureRandom } from './random'
 import { words } from './words'
+
+export { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded } from './crypto'
+export { words } from './words'
+export { secureRandom } from './random'
+
 
 type TTypesMap = {
   Bytes: Uint8Array
@@ -115,7 +119,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
 
   const _toOut = (bytes: TBytes): T => {
     if (options && options.output) {
-      return options.output === 'Base58' ? base58Encode(bytes) : bytes
+      return (options.output === 'Base58' ? base58Encode(bytes) : bytes) as T
     }
     return base58Encode(bytes) as T
   }
