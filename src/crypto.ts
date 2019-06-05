@@ -97,7 +97,7 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut> {
 
   //Random
   randomBytes: (size: number) => TBytes
-  randomSeed: () => string
+  randomSeed: (wordsCount?: number) => string
 
   //Verification
   verifySignature: (publicKey: TBinaryIn, bytes: TBinaryIn, signature: TBinaryIn) => boolean
