@@ -1,6 +1,6 @@
-import { crypto, output, MAIN_NET_CHAIN_ID } from '../src/index'
+import { crypto, MAIN_NET_CHAIN_ID } from '../src/index'
 
-const { seed, address, sharedKey, messageEncrypt, messageDecrypt, randomBytes, bytesToString, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode } = crypto({ output: output.Base58 })
+const { seed, address, sharedKey, messageEncrypt, messageDecrypt, randomBytes, bytesToString, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode } = crypto({ output: 'Base58' })
 
 const s = '1f98af466da54014bdc08bfbaaaf3c67'
 
@@ -86,7 +86,7 @@ test('output equality', () => {
     address: addressBytes,
     signBytes: signBytesBytes,
     keyPair: keyPairBytes,
-  } = crypto()
+  } = crypto({ output: 'Bytes' })
 
   const message = [1, 2, 3]
   const random = randomBytes(64)

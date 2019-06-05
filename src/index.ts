@@ -8,17 +8,28 @@ export { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16,
 import { secureRandom } from './random'
 import { words } from './words'
 
-export const output = {
-  Bytes: Uint8Array.from([]),
-  Base58: '',
+type TTypesMap = {
+  Bytes: Uint8Array
+  Base58: string
 }
 
-type TOptions<T extends TBinaryOut = TBytes, S extends TSeed | undefined = undefined> = { output?: T, seed?: S }
+type TDefaultOut = 'Base58'
+type TOutput = keyof TTypesMap
+type TOptions<T extends TBinaryOut = TDefaultOut, S extends TSeed | undefined = undefined> = { output?: T, seed?: S }
 type Words = CryptoJS.LibWordArray | CryptoJS.WordArray | CryptoJS.DecryptedMessage
-type TWavesCrypto<T extends TBinaryOut = TBytes, S extends TSeed | undefined = undefined> =
+type TWavesCrypto<T extends TBinaryOut = TDefaultOut, S extends TSeed | undefined = undefined> =
   IWavesCrypto<T> & (S extends undefined ? ISeedRelated<T> : ISeedEmbeded<T>)
 
-export const crypto = <T extends TBinaryOut = TBytes, S extends TSeed | undefined = undefined>(options?: TOptions<T, S>): TWavesCrypto<T, S> => {
+export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | undefined = undefined>(options?: TOptions<TOut, S>): TWavesCrypto<TTypesMap[TOut], S> => {
+
+  if (options && options.seed == '')
+    throw new Error('Empty seed is not allowed.')
+
+  type T = TTypesMap[TOut]
+
+  const c1 = <T1, R>(f: (a: T1) => R) => (a: T1) => () => f(a)
+  const c2 = <T1, T2, R>(f: (a: T1, b: T2) => R) => (a: T1) => (b: T2) => f(a, b)
+  const c3 = <T1, T2, T3, R>(f: (a: T1, b: T2, c: T3) => R) => (a: T1) => (b: T2) => (c: T3) => f(a, b, c)
 
   const isWords = (val: any): val is Words =>
     (<CryptoJS.LibWordArray>val).words !== undefined ||
@@ -103,10 +114,10 @@ export const crypto = <T extends TBinaryOut = TBytes, S extends TSeed | undefine
   }
 
   const _toOut = (bytes: TBytes): T => {
-    if (typeof (options || { output: output.Bytes }).output == 'string')
-      return base58Encode(bytes) as T
-
-    return bytes as T
+    if (options && options.output) {
+      return options.output === 'Base58' ? base58Encode(bytes) : bytes
+    }
+    return base58Encode(bytes) as T
   }
 
   const _concat = (...arrays: (TBinaryIn | Words)[]): TBytes =>
@@ -346,8 +357,8 @@ export const crypto = <T extends TBinaryOut = TBytes, S extends TSeed | undefine
   return <unknown>{
     signBytes: s ? c3(signBytes)(s) : signBytes,
     keyPair: s ? c1(keyPair)(s) : keyPair,
-    publicKey: s ? c2(publicKey)(s) : publicKey,
-    privateKey: s ? c2(privateKey)(s) : privateKey,
+    publicKey: s ? c1(publicKey)(s) : publicKey,
+    privateKey: s ? c1(privateKey)(s) : privateKey,
     address: s ? c2(address)(s) : address,
     seed,
     blake2b,
@@ -373,7 +384,3 @@ export const crypto = <T extends TBinaryOut = TBytes, S extends TSeed | undefine
     concat,
   } as TWavesCrypto<T, S>
 }
-
-const c1 = <T1, R>(f: (a: T1) => R) => (a: T1) => f(a)
-const c2 = <T1, T2, R>(f: (a: T1, b: T2) => R) => (a: T1) => (b: T2) => f(a, b)
-const c3 = <T1, T2, T3, R>(f: (a: T1, b: T2, c: T3) => R) => (a: T1) => (b: T2) => (c: T3) => f(a, b, c)
