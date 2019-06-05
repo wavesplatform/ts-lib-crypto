@@ -1,15 +1,12 @@
-
-type RArray8 = 'Array8'
-type RArray16 = 'Array16'
-type RArray32 = 'Array32'
-type RBuffer = 'Buffer'
-type RUint8Array = 'Uint8Array'
-type RUint16Array = 'Uint16Array'
-type RUint32Array = 'Uint32Array'
-type RandomOutput = RArray8 | RArray16 | RArray32 | RUint8Array | RUint16Array | RUint32Array | RBuffer
-type _if<T, E, A, B> = T extends E ? A : B
-type _switch<T, A1, B1, A2, B2, A3, B3, A4, B4, C> = _if<T, A1, B1, _if<T, A2, B2, _if<T, A3, B3, _if<T, A4, B4, C>>>>
-type R<T> = _switch<T, RBuffer, Buffer, RUint8Array, Uint8Array, RUint16Array, Uint16Array, RUint32Array, Uint32Array, number[]>
+type TTypesMap = {
+  Array8: number[]
+  Array16: number[]
+  Array32: number[]
+  Buffer: Buffer
+  Uint8Array: Uint8Array
+  Uint16Array: Uint16Array
+  Uint32Array: Uint32Array
+}
 
 
 const random = (count: number) => {
@@ -32,25 +29,25 @@ const ensureBuffer = () => {
 
 const isBrowser = typeof window !== 'undefined' && ({}).toString.call(window) === '[object Window]'
 
-export const secureRandom = <T extends RandomOutput>(count: number, type: T): R<T> => {
+export const secureRandom = <T extends keyof TTypesMap>(count: number, type: T): TTypesMap[T] => {
   switch (type) {
     case 'Array8':
-      return Array.from(random(count)) as R<T>
+      return Array.from(random(count)) as TTypesMap[T]
     case 'Array16':
-      return Array.from(secureRandom(count, 'Uint16Array')) as R<T>
+      return Array.from(secureRandom(count, 'Uint16Array')) as TTypesMap[T]
     case 'Array32':
-      return Array.from(secureRandom(count, 'Uint32Array')) as R<T>
+      return Array.from(secureRandom(count, 'Uint32Array')) as TTypesMap[T]
     case 'Buffer':
       ensureBuffer()
-      return Buffer.from(random(count)) as R<T>
+      return Buffer.from(random(count)) as TTypesMap[T]
     case 'Uint8Array':
-      return random(count) as R<T>
+      return random(count) as TTypesMap[T]
     case 'Uint16Array':
       return new Uint16Array(count)
-        .map(_ => random(2).reduce((a, b, i) => a | b << 8 * (1 - i), 0)) as R<T>
+        .map(_ => random(2).reduce((a, b, i) => a | b << 8 * (1 - i), 0)) as TTypesMap[T]
     case 'Uint32Array':
       return new Uint32Array(count)
-        .map(_ => random(4).reduce((a, b, i) => a | b << 8 * (1 - i), 0)) as R<T>
+        .map(_ => random(4).reduce((a, b, i) => a | b << 8 * (1 - i), 0)) as TTypesMap[T]
     default:
       throw new Error(type + ' is unsupported.')
   }
