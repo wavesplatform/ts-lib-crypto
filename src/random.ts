@@ -8,7 +8,6 @@ type TTypesMap = {
   Uint32Array: Uint32Array
 }
 
-
 const random = (count: number) => {
   if (isBrowser) {
     const arr = new Uint8Array(count)

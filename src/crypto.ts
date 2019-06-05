@@ -50,8 +50,30 @@ export type TSeed = TRawStringIn | ISeedWithNonce
 /* Waves Crypto is a collection of essential cryptography and hashing
    algorithms used by Waves, protocol entities and binary structures. */
 
-export interface IWavesCrypto<TDesiredOut extends TBinaryOut> {
+export interface ISeedRelated<TDesiredOut extends TBinaryOut> {
+  //Seeds, keys and addresses
   seed: (seed: TSeed, nonce: number) => ISeedWithNonce
+  keyPair: (seed: TSeed) => TKeyPair<TDesiredOut>
+  publicKey: (seed: TSeed) => TDesiredOut
+  privateKey: (seed: TSeed) => TDesiredOut
+  address: (seedOrPublicKey: TSeed | TPublicKey<TBinaryIn>, chainId?: TChainId) => TDesiredOut
+
+  //Bytes hashing and signing
+  signBytes: (seedOrPrivateKey: TSeed | TPrivateKey<TBinaryIn>, bytes: TBinaryIn, random?: TBinaryIn) => TDesiredOut
+}
+
+export interface ISeedEmbeded<TDesiredOut extends TBinaryOut> {
+  //Seeds, keys and addresses
+  keyPair: () => TKeyPair<TDesiredOut>
+  publicKey: () => TDesiredOut
+  privateKey: () => TDesiredOut
+  address: (chainId?: TChainId) => TDesiredOut
+
+  //Bytes hashing and signing
+  signBytes: (bytes: TBinaryIn, random?: TBinaryIn) => TDesiredOut
+}
+
+export interface IWavesCrypto<TDesiredOut extends TBinaryOut> {
 
   //Hashing 
   blake2b: (input: TBinaryIn) => TDesiredOut
@@ -72,18 +94,10 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut> {
   split: (binary: TBinaryIn, ...sizes: number[]) => TBytes[]
   concat: (...binaries: TBinaryIn[]) => TDesiredOut
 
-  //Keys, seeds and addresses
-  keyPair: (seed: TSeed) => TKeyPair<TDesiredOut>
-  publicKey: (seed: TSeed) => TDesiredOut
-  privateKey: (seed: TSeed) => TDesiredOut
-  address: (seedOrKeys: TSeed | TPublicKey<TBinaryIn>, chainId?: TChainId) => TDesiredOut
 
   //Random
   randomBytes: (size: number) => TBytes
   randomSeed: () => string
-
-  //Bytes hashing and signing
-  signBytes: (bytes: TBinaryIn, seedOrPrivateKey: TSeed | TPrivateKey<TBinaryIn>, random?: TBinaryIn) => TDesiredOut
 
   //Verification
   verifySignature: (publicKey: TBinaryIn, bytes: TBinaryIn, signature: TBinaryIn) => boolean

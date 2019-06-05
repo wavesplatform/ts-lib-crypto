@@ -3,8 +3,8 @@ import * as blake from './libs/blake2b'
 import { keccak256 } from './libs/sha3'
 import base58 from './libs/base58'
 import axlsign from './libs/axlsign'
-import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn } from './crypto'
-export { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey } from './crypto'
+import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded } from './crypto'
+export { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded } from './crypto'
 import { secureRandom } from './random'
 import { words } from './words'
 
@@ -13,10 +13,12 @@ export const output = {
   Base58: '',
 }
 
-type TOptions<T extends TBinaryOut> = { output: T }
+type TOptions<T extends TBinaryOut = TBytes, S extends TSeed | undefined = undefined> = { output?: T, seed?: S }
 type Words = CryptoJS.LibWordArray | CryptoJS.WordArray | CryptoJS.DecryptedMessage
+type TWavesCrypto<T extends TBinaryOut = TBytes, S extends TSeed | undefined = undefined> =
+  IWavesCrypto<T> & (S extends undefined ? ISeedRelated<T> : ISeedEmbeded<T>)
 
-export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IWavesCrypto<T> => {
+export const crypto = <T extends TBinaryOut = TBytes, S extends TSeed | undefined = undefined>(options?: TOptions<T, S>): TWavesCrypto<T, S> => {
 
   const isWords = (val: any): val is Words =>
     (<CryptoJS.LibWordArray>val).words !== undefined ||
@@ -203,7 +205,7 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
       .map(x => words[x % words.length])
       .join(' ')
 
-  const signBytes = (bytes: TBinaryIn, seedOrPrivateKey: TSeed | TPrivateKey<TBinaryIn>, random?: TBinaryIn): T =>
+  const signBytes = (seedOrPrivateKey: TSeed | TPrivateKey<TBinaryIn>, bytes: TBinaryIn, random?: TBinaryIn): T =>
     _toOut(
       axlsign.sign(_fromIn(isPrivateKey(seedOrPrivateKey)
         ? seedOrPrivateKey.privateKey
@@ -339,7 +341,14 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
     return String.fromCharCode.apply(null, Array.from(M))
   }
 
-  return {
+  const s = (options && options.seed) ? options.seed as TSeed : undefined
+
+  return <unknown>{
+    signBytes: s ? c3(signBytes)(s) : signBytes,
+    keyPair: s ? c1(keyPair)(s) : keyPair,
+    publicKey: s ? c2(publicKey)(s) : publicKey,
+    privateKey: s ? c2(privateKey)(s) : privateKey,
+    address: s ? c2(address)(s) : address,
     seed,
     blake2b,
     keccak,
@@ -352,13 +361,8 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
     base16Decode,
     stringToBytes,
     bytesToString,
-    keyPair,
-    publicKey,
-    privateKey,
-    address,
     randomBytes,
     randomSeed,
-    signBytes,
     verifySignature,
     verifyPublicKey,
     verifyAddress,
@@ -367,8 +371,9 @@ export const crypto = <T extends TBinaryOut = TBytes>(options?: TOptions<T>): IW
     messageEncrypt,
     split,
     concat,
-  }
+  } as TWavesCrypto<T, S>
 }
 
-
-
+const c1 = <T1, R>(f: (a: T1) => R) => (a: T1) => f(a)
+const c2 = <T1, T2, R>(f: (a: T1, b: T2) => R) => (a: T1) => (b: T2) => f(a, b)
+const c3 = <T1, T2, T3, R>(f: (a: T1, b: T2, c: T3) => R) => (a: T1) => (b: T2) => (c: T3) => f(a, b, c)

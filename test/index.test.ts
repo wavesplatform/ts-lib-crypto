@@ -42,7 +42,7 @@ test('privateKey', () =>
 
 test('signature roundtrip', () => {
   const bytes = Uint8Array.from([1, 2, 3, 4])
-  const sig = signBytes(bytes, s)
+  const sig = signBytes(s, bytes)
   const valid = verifySignature(publicKey(s), bytes, sig)
   const invalid = verifySignature(publicKey(s), Uint8Array.from([4, 3, 2, 1]), sig)
   expect(valid).toBe(true)
@@ -93,7 +93,7 @@ test('output equality', () => {
 
   expect(base58Encode(publicKeyBytes(s))).toBe(publicKey(s))
   expect(base58Encode(addressBytes(s))).toBe(address(s))
-  expect(base58Encode(signBytesBytes(message, s, random))).toBe(signBytes(message, s, random))
+  expect(base58Encode(signBytesBytes(s, message, random))).toBe(signBytes(s, message, random))
   expect(base58Encode(keyPairBytes(s).privateKey)).toBe(keyPair(s).privateKey)
 })
 
@@ -117,3 +117,4 @@ test('encrypt and decrypt message roundtrip', () => {
 
   expect(message).toEqual(originalMessage)
 })
+
