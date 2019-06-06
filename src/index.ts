@@ -3,11 +3,11 @@ import * as blake from './libs/blake2b'
 import { keccak256 } from './libs/sha3'
 import base58 from './libs/base58'
 import axlsign from './libs/axlsign'
-import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded } from './crypto'
+import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, IBinarySeed, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded } from './crypto'
 import { secureRandom } from './random'
 import { words } from './words'
 
-export { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded } from './crypto'
+export { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, IBinarySeed as ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded } from './crypto'
 export { words } from './words'
 export { secureRandom } from './random'
 
@@ -45,8 +45,8 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
   const isString = (val: any): val is string =>
     typeof val === 'string'
 
-  const isSeedWithNonce = (val: any): val is ISeedWithNonce =>
-    (<ISeedWithNonce>val).nonce !== undefined
+  const isSeedWithNonce = (val: any): val is IBinarySeed =>
+    (<IBinarySeed>val).nonce !== undefined
 
   const isPublicKey = <T extends TBinaryIn>(val: any): val is TPublicKey<T> =>
     (<TPublicKey>val).publicKey !== undefined
@@ -54,9 +54,9 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
   const isPrivateKey = <T extends TBinaryIn>(val: any): val is TPrivateKey<T> =>
     (<TPrivateKey>val).privateKey !== undefined
 
-  const decomposeSeed = (seed: TSeed): { seed: Uint8Array, nonce?: number } => {
+  const toBinarySeed = (seed: TSeed): IBinarySeed => {
     if (isSeedWithNonce(seed))
-      return { seed: decomposeSeed(seed.seed).seed, nonce: seed.nonce }
+      return { seed: toBinarySeed(seed.seed).seed, nonce: seed.nonce }
 
     if (isString(seed))
       return { seed: stringToBytes(seed), nonce: undefined }
@@ -183,7 +183,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
   }
 
   const keyPair = (seed: TSeed): TKeyPair<T> => {
-    const { seed: seedBytes, nonce } = decomposeSeed(seed)
+    const { seed: seedBytes, nonce } = toBinarySeed(seed)
 
     const seedHash = buildSeedHash(seedBytes, nonce)
     const keys = axlsign.generateKeyPair(seedHash)
@@ -267,7 +267,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     return true
   }
 
-  const seed = (seed: TSeed, nonce: number): ISeedWithNonce => ({ seed: decomposeSeed(seed).seed, nonce })
+  const seed = (seed: TSeed, nonce: number): IBinarySeed => ({ seed: toBinarySeed(seed).seed, nonce })
 
   const aesEncrypt = (data: TBinaryIn, secret: TBinaryIn, iv?: TBinaryIn, mode: 'ECB' | 'CTR' = 'ECB'): T =>
     _toOut(
@@ -386,5 +386,6 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     messageEncrypt,
     split,
     concat,
+    toBinarySeed,
   } as TWavesCrypto<T, S>
 }

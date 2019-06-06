@@ -6,9 +6,9 @@ export const SIGNATURE_LENGTH = 64
 export const MAIN_NET_CHAIN_ID = 87 //W
 export const TEST_NET_CHAIN_ID = 84 //T
 
-export interface ISeedWithNonce {
+export interface IBinarySeed {
   seed: TBytes
-  nonce: number
+  nonce?: number
 }
 
 /* Type aliases used to increase flexibility and be able
@@ -40,7 +40,7 @@ export type TPrivateKey<T extends TBinaryIn = TBytes> = { privateKey: T }
 export type TKeyPair<T extends TBinaryIn = TBytes> = TPublicKey<T> & TPrivateKey<T>
 
 //TSeed is a union of types that could represent a Waves seed.
-export type TSeed = TRawStringIn | ISeedWithNonce
+export type TSeed = TRawStringIn | IBinarySeed
 
 /* Consider that every method should handle TSeed
    seamlessly so in case of absence of type union operator
@@ -52,7 +52,7 @@ export type TSeed = TRawStringIn | ISeedWithNonce
 
 export interface ISeedRelated<TDesiredOut extends TBinaryOut> {
   //Seeds, keys and addresses
-  seed: (seed: TSeed, nonce: number) => ISeedWithNonce
+  seed: (seed: TSeed, nonce: number) => IBinarySeed
   keyPair: (seed: TSeed) => TKeyPair<TDesiredOut>
   publicKey: (seed: TSeed) => TDesiredOut
   privateKey: (seed: TSeed) => TDesiredOut
@@ -93,7 +93,7 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut> {
   bytesToString: (input: TBinaryIn) => string
   split: (binary: TBinaryIn, ...sizes: number[]) => TBytes[]
   concat: (...binaries: TBinaryIn[]) => TDesiredOut
-
+  toBinarySeed(seed: TSeed): IBinarySeed
 
   //Random
   randomBytes: (size: number) => TBytes
