@@ -7,7 +7,7 @@ import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16,
 import { secureRandom } from './random'
 import { words } from './words'
 
-export { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, IBinarySeed as ISeedWithNonce, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded } from './crypto'
+export { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, IBinarySeed, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded } from './crypto'
 export { words } from './words'
 export { secureRandom } from './random'
 
