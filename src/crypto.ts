@@ -32,12 +32,12 @@ export type TRawStringIn = TBytes | string | number[]
 export type TBinaryOut = TBytes | TBase58
 
 //TPublicKey is a BASE58 string representation of a public key.
-export type TPublicKey<T extends TBinaryIn = TBytes> = { publicKey: T }
+export type TPublicKey<T extends TBinaryIn = TBase58> = { publicKey: T }
 
 //TPrivateKey is a BASE58 string representation of a private key.
-export type TPrivateKey<T extends TBinaryIn = TBytes> = { privateKey: T }
+export type TPrivateKey<T extends TBinaryIn = TBase58> = { privateKey: T }
 
-export type TKeyPair<T extends TBinaryIn = TBytes> = TPublicKey<T> & TPrivateKey<T>
+export type TKeyPair<T extends TBinaryIn = TBase58> = TPublicKey<T> & TPrivateKey<T>
 
 //TSeed is a union of types that could represent a Waves seed.
 export type TSeed = TRawStringIn | IBinarySeed
@@ -93,7 +93,6 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut> {
   bytesToString: (input: TBinaryIn) => string
   split: (binary: TBinaryIn, ...sizes: number[]) => TBytes[]
   concat: (...binaries: TBinaryIn[]) => TDesiredOut
-  toBinarySeed(seed: TSeed): IBinarySeed
 
   //Random
   randomBytes: (size: number) => TBytes

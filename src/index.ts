@@ -3,14 +3,13 @@ import * as blake from './libs/blake2b'
 import { keccak256 } from './libs/sha3'
 import base58 from './libs/base58'
 import axlsign from './libs/axlsign'
-import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, IBinarySeed, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded } from './crypto'
+import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, IBinarySeed, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded, TEST_NET_CHAIN_ID } from './crypto'
 import { secureRandom } from './random'
 import { words } from './words'
 
 export { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, IBinarySeed, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded } from './crypto'
 export { words } from './words'
 export { secureRandom } from './random'
-
 
 type TTypesMap = {
   Bytes: Uint8Array
@@ -23,6 +22,34 @@ type TOptions<T extends TBinaryOut = TDefaultOut, S extends TSeed | undefined = 
 type Words = CryptoJS.LibWordArray | CryptoJS.WordArray | CryptoJS.DecryptedMessage
 type TWavesCrypto<T extends TBinaryOut = TDefaultOut, S extends TSeed | undefined = undefined> =
   IWavesCrypto<T> & (S extends undefined ? ISeedRelated<T> : ISeedEmbeded<T>)
+
+const isSeedWithNonce = (val: any): val is IBinarySeed =>
+  (<IBinarySeed>val).nonce !== undefined
+
+const isString = (val: any): val is string =>
+  typeof val === 'string'
+
+const stringToBytes = (str: string): TBytes =>
+  Uint8Array.from([...unescape(encodeURIComponent(str))].map(c => c.charCodeAt(0)))
+
+const isUint8Array = (val: Uint8Array | number[]): val is Uint8Array =>
+  (<Uint8Array>val).buffer !== undefined
+
+const base58Decode = (input: TBase58): TBytes =>
+  base58.decode(input)
+
+const _fromIn = (inValue: TBinaryIn): TBytes => {
+  if (isString(inValue))
+    return base58Decode(inValue)
+
+  if (isUint8Array(inValue))
+    return inValue
+
+  return Uint8Array.from(inValue)
+}
+
+const bytesToString = (bytes: TBinaryIn): string =>
+  String.fromCharCode.apply(null, Array.from(_fromIn(bytes)))
 
 export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | undefined = undefined>(options?: TOptions<TOut, S>): TWavesCrypto<TTypesMap[TOut], S> => {
 
@@ -39,14 +66,6 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     (<CryptoJS.LibWordArray>val).words !== undefined ||
     (<CryptoJS.WordArray>val).key !== undefined
 
-  const isUint8Array = (val: Uint8Array | number[]): val is Uint8Array =>
-    (<Uint8Array>val).buffer !== undefined
-
-  const isString = (val: any): val is string =>
-    typeof val === 'string'
-
-  const isSeedWithNonce = (val: any): val is IBinarySeed =>
-    (<IBinarySeed>val).nonce !== undefined
 
   const isPublicKey = <T extends TBinaryIn>(val: any): val is TPublicKey<T> =>
     (<TPublicKey>val).publicKey !== undefined
@@ -54,23 +73,10 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
   const isPrivateKey = <T extends TBinaryIn>(val: any): val is TPrivateKey<T> =>
     (<TPrivateKey>val).privateKey !== undefined
 
-  const toBinarySeed = (seed: TSeed): IBinarySeed => {
-    if (isSeedWithNonce(seed))
-      return { seed: toBinarySeed(seed.seed).seed, nonce: seed.nonce }
-
-    if (isString(seed))
-      return { seed: stringToBytes(seed), nonce: undefined }
-
-    return { seed: _fromIn(seed), nonce: undefined }
-  }
-
   const split = (binary: TBinaryIn, ...sizes: number[]): TBytes[] => {
     const r = sizes.reduce<{ arr: TBytes, r: TBytes[] }>((a, s) => ({ arr: a.arr.slice(s), r: [...a.r, a.arr.slice(0, s)] }), { arr: _fromIn(binary), r: [] })
     return [...r.r, r.arr]
   }
-
-  const chainIdToNumber = (chainId: TChainId): number =>
-    typeof chainId === 'string' ? chainId.charCodeAt(0) : chainId
 
   const _hashChain = (input: TBytes): TBytes =>
     _fromIn(keccak(blake2b(input)))
@@ -97,15 +103,6 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     return u8
   }
 
-  const _fromIn = (inValue: TBinaryIn): TBytes => {
-    if (isString(inValue))
-      return base58Decode(inValue)
-
-    if (isUint8Array(inValue))
-      return inValue
-
-    return Uint8Array.from(inValue)
-  }
 
   const _fromRawIn = (inValue: TBinaryIn): TBytes => {
     if (isString(inValue))
@@ -153,20 +150,11 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
   const base58Encode = (input: TBinaryIn): TBase58 =>
     base58.encode(_fromIn(input))
 
-  const base58Decode = (input: TBase58): TBytes =>
-    base58.decode(input)
-
   const base16Encode = (input: TBinaryIn): TBase16 =>
     CryptoJS.enc.Hex.stringify(_toWords(_fromIn(input)))
 
   const base16Decode = (input: TBase16): TBytes =>
     _fromWords(CryptoJS.enc.Hex.parse(input))
-
-  const stringToBytes = (str: string): TBytes =>
-    Uint8Array.from([...unescape(encodeURIComponent(str))].map(c => c.charCodeAt(0)))
-
-  const bytesToString = (bytes: TBinaryIn): string =>
-    String.fromCharCode.apply(null, Array.from(_fromIn(bytes)))
 
   const buildSeedHash = (seedBytes: Uint8Array, nonce?: number): Uint8Array => {
     const nonceArray = [0, 0, 0, 0]
@@ -183,7 +171,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
   }
 
   const keyPair = (seed: TSeed): TKeyPair<T> => {
-    const { seed: seedBytes, nonce } = toBinarySeed(seed)
+    const { seed: seedBytes, nonce } = Seed.toBinary(seed)
 
     const seedHash = buildSeedHash(seedBytes, nonce)
     const keys = axlsign.generateKeyPair(seedHash)
@@ -240,7 +228,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
 
   const verifyAddress = (addr: TBinaryIn, optional?: { chainId?: TChainId, publicKey?: TBinaryIn }): boolean => {
 
-    const chainId = chainIdToNumber(optional ? optional.chainId || MAIN_NET_CHAIN_ID : MAIN_NET_CHAIN_ID)
+    const chainId = ChaidId.toNumber(optional ? optional.chainId || MAIN_NET_CHAIN_ID : MAIN_NET_CHAIN_ID)
 
     try {
       const addressBytes = _fromIn(addr)
@@ -267,7 +255,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     return true
   }
 
-  const seed = (seed: TSeed, nonce: number): IBinarySeed => ({ seed: toBinarySeed(seed).seed, nonce })
+  const seed = (seed: TSeed, nonce: number): IBinarySeed => ({ seed: Seed.toBinary(seed).seed, nonce })
 
   const aesEncrypt = (data: TBinaryIn, secret: TBinaryIn, iv?: TBinaryIn, mode: 'ECB' | 'CTR' = 'ECB'): T =>
     _toOut(
@@ -386,6 +374,32 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     messageEncrypt,
     split,
     concat,
-    toBinarySeed,
   } as TWavesCrypto<T, S>
+}
+
+export const Seed = {
+  toBinary(seed: TSeed): IBinarySeed {
+    if (isSeedWithNonce(seed))
+      return { seed: Seed.toBinary(seed.seed).seed, nonce: seed.nonce }
+
+    if (isString(seed))
+      return { seed: stringToBytes(seed), nonce: undefined }
+
+    return { seed: _fromIn(seed), nonce: undefined }
+  },
+  toString(seed: TSeed): string {
+    return bytesToString(Seed.toBinary(seed).seed)
+  },
+}
+
+export const ChaidId = {
+  toNumber(chainId: TChainId): number {
+    return (typeof chainId === 'string' ? chainId.charCodeAt(0) : chainId)
+  },
+  isMainnet(chainId: TChainId): boolean {
+    return ChaidId.toNumber(chainId) === MAIN_NET_CHAIN_ID
+  },
+  isTestnet(chainId: TChainId): boolean {
+    return ChaidId.toNumber(chainId) === TEST_NET_CHAIN_ID
+  },
 }
