@@ -289,19 +289,16 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     return hmacSHA256(sharedKey, prefixHash)
   }
 
-  const messageEncrypt = (sharedKey: TBinaryIn, message: TRawStringIn, prefix: TRawStringIn): T => {
+  const messageEncrypt = (sharedKey: TBinaryIn, message: TRawStringIn): T => {
     const KEK = _fromIn(sharedKey)
     const CEK = randomBytes(32)
     const IV = randomBytes(16)
-    const p = _fromRawIn(prefix)
     const m = _fromRawIn(message)
-
-    const CEK_FOR_HMAC = CEK.map((byte, index) => byte | p[index % p.length])
 
     const Cc = aesEncrypt(m, CEK, IV, 'CTR')
     const Ccek = aesEncrypt(CEK, sharedKey)
     const Mhmac = hmacSHA256(m, CEK)
-    const CEKhmac = hmacSHA256(CEK_FOR_HMAC, KEK)
+    const CEKhmac = hmacSHA256(CEK, KEK)
 
     const packageBytes = _concat(
       Ccek,
@@ -314,8 +311,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     return _toOut(packageBytes)
   }
 
-  const messageDecrypt = (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn, prefix: TRawStringIn): string => {
-    const P = _fromRawIn(prefix)
+  const messageDecrypt = (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn): string => {
 
     const [
       Ccek,
@@ -327,8 +323,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
 
     const CEK = _fromIn(aesDecrypt(Ccek, sharedKey))
 
-    const CEK_FOR_HMAC = CEK.map((byte, index) => byte | P[index % P.length])
-    const CEKhmac = _fromIn(hmacSHA256(CEK_FOR_HMAC, _fromIn(sharedKey)))
+    const CEKhmac = _fromIn(hmacSHA256(CEK, _fromIn(sharedKey)))
 
     const isValidKey = CEKhmac.every((v, i) => v === _CEKhmac[i])
     if (!isValidKey)

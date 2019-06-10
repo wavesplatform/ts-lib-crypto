@@ -112,8 +112,8 @@ test('encrypt and decrypt message roundtrip', () => {
   const a = keyPair(s)
   const b = keyPair(s + s)
   const sk = sharedKey(a.privateKey, b.publicKey, prefix)
-  const encryptedMessage = messageEncrypt(sk, originalMessage, prefix)
-  const message = messageDecrypt(sk, encryptedMessage, prefix)
+  const encryptedMessage = messageEncrypt(sk, originalMessage)
+  const message = messageDecrypt(sk, encryptedMessage)
 
   expect(message).toEqual(originalMessage)
 })

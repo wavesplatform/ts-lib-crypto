@@ -105,8 +105,8 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
 
   //Messaging
   sharedKey: (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TRawStringIn) => TDesiredOut
-  messageDecrypt: (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn, prefix: TRawStringIn) => string
-  messageEncrypt: (sharedKey: TBinaryIn, message: TRawStringIn, prefix: TRawStringIn) => TDesiredOut
+  messageDecrypt: (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn) => string
+  messageEncrypt: (sharedKey: TBinaryIn, message: TRawStringIn) => TDesiredOut
 }
 
 
