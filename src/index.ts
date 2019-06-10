@@ -290,7 +290,6 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
   }
 
   const messageEncrypt = (sharedKey: TBinaryIn, message: TRawStringIn): T => {
-    const KEK = _fromIn(sharedKey)
     const CEK = randomBytes(32)
     const IV = randomBytes(16)
     const m = _fromRawIn(message)
@@ -298,7 +297,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     const Cc = aesEncrypt(m, CEK, IV, 'CTR')
     const Ccek = aesEncrypt(CEK, sharedKey)
     const Mhmac = hmacSHA256(m, CEK)
-    const CEKhmac = hmacSHA256(CEK, KEK)
+    const CEKhmac = hmacSHA256(concat(CEK, IV), sharedKey)
 
     const packageBytes = _concat(
       Ccek,
@@ -323,7 +322,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
 
     const CEK = _fromIn(aesDecrypt(Ccek, sharedKey))
 
-    const CEKhmac = _fromIn(hmacSHA256(CEK, _fromIn(sharedKey)))
+    const CEKhmac = _fromIn(hmacSHA256(concat(CEK, iv), _fromIn(sharedKey)))
 
     const isValidKey = CEKhmac.every((v, i) => v === _CEKhmac[i])
     if (!isValidKey)
