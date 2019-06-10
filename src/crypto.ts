@@ -50,7 +50,7 @@ export type TSeed = TRawStringIn | IBinarySeed
 /* Waves Crypto is a collection of essential cryptography and hashing
    algorithms used by Waves, protocol entities and binary structures. */
 
-export interface ISeedRelated<TDesiredOut extends TBinaryOut> {
+export interface ISeedRelated<TDesiredOut extends TBinaryOut = TBase58> {
   //Seeds, keys and addresses
   seed: (seed: TSeed, nonce: number) => IBinarySeed
   keyPair: (seed: TSeed) => TKeyPair<TDesiredOut>
@@ -62,7 +62,7 @@ export interface ISeedRelated<TDesiredOut extends TBinaryOut> {
   signBytes: (seedOrPrivateKey: TSeed | TPrivateKey<TBinaryIn>, bytes: TBinaryIn, random?: TBinaryIn) => TDesiredOut
 }
 
-export interface ISeedEmbeded<TDesiredOut extends TBinaryOut> {
+export interface ISeedEmbeded<TDesiredOut extends TBinaryOut = TBase58> {
   //Seeds, keys and addresses
   keyPair: () => TKeyPair<TDesiredOut>
   publicKey: () => TDesiredOut
@@ -73,7 +73,7 @@ export interface ISeedEmbeded<TDesiredOut extends TBinaryOut> {
   signBytes: (bytes: TBinaryIn, random?: TBinaryIn) => TDesiredOut
 }
 
-export interface IWavesCrypto<TDesiredOut extends TBinaryOut> {
+export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
 
   //Hashing 
   blake2b: (input: TBinaryIn) => TDesiredOut
