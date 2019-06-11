@@ -3,7 +3,7 @@ import * as blake from './libs/blake2b'
 import { keccak256 } from './libs/sha3'
 import base58 from './libs/base58'
 import axlsign from './libs/axlsign'
-import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, IBinarySeed, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded, TEST_NET_CHAIN_ID } from './crypto'
+import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, IBinarySeed, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded, TEST_NET_CHAIN_ID, AESMode } from './crypto'
 import { secureRandom } from './random'
 import { words } from './words'
 
@@ -50,6 +50,14 @@ const _fromIn = (inValue: TBinaryIn): TBytes => {
 
 const bytesToString = (bytes: TBinaryIn): string =>
   String.fromCharCode.apply(null, Array.from(_fromIn(bytes)))
+
+const aesModeMap: Record<AESMode, CryptoJS.Mode> = {
+  'CBC': CryptoJS.mode.CBC,
+  'CFB': CryptoJS.mode.CFB,
+  'CTR': CryptoJS.mode.CTR,
+  'OFB': CryptoJS.mode.OFB,
+  'ECB': CryptoJS.mode.ECB,
+}
 
 export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | undefined = undefined>(options?: TOptions<TOut, S>): TWavesCrypto<TTypesMap[TOut], S> => {
 
@@ -257,25 +265,25 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
 
   const seed = (seed: TSeed, nonce: number): IBinarySeed => ({ seed: Seed.toBinary(seed).seed, nonce })
 
-  const aesEncrypt = (data: TBinaryIn, secret: TBinaryIn, iv?: TBinaryIn, mode: 'ECB' | 'CTR' = 'ECB'): T =>
+  const aesEncrypt = (data: TBinaryIn, secret: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): T =>
     _toOut(
       base64Decode(
         CryptoJS.AES.encrypt(_toWords(_fromIn(data)), _toWords(_fromIn(secret)),
           {
             iv: iv ? _toWords(_fromIn(iv)) : undefined,
-            mode: mode === 'ECB' ? CryptoJS.mode.ECB : CryptoJS.mode.CTR,
+            mode: aesModeMap[mode],
           })
           .toString()
       )
     )
 
-  const aesDecrypt = (encryptedMessage: TBinaryIn, secret: TBinaryIn, iv?: TBinaryIn, mode: 'ECB' | 'CTR' = 'ECB'): T =>
+  const aesDecrypt = (encryptedMessage: TBinaryIn, secret: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): T =>
     _toOut(
       _fromWords(
         CryptoJS.AES.decrypt(base64Encode(encryptedMessage), _toWords(_fromIn(secret)),
           {
             iv: iv ? _toWords(_fromIn(iv)) : undefined,
-            mode: mode === 'ECB' ? CryptoJS.mode.ECB : CryptoJS.mode.CTR,
+            mode: aesModeMap[mode],
           })
       )
     )
@@ -294,8 +302,8 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     const IV = randomBytes(16)
     const m = _fromRawIn(message)
 
-    const Cc = aesEncrypt(m, CEK, IV, 'CTR')
-    const Ccek = aesEncrypt(CEK, sharedKey)
+    const Cc = aesEncrypt(m, CEK, 'CTR', IV)
+    const Ccek = aesEncrypt(CEK, sharedKey, 'ECB')
     const Mhmac = hmacSHA256(m, CEK)
     const CEKhmac = hmacSHA256(concat(CEK, IV), sharedKey)
 
@@ -328,7 +336,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     if (!isValidKey)
       throw new Error('Invalid message')
 
-    const M = _fromIn(aesDecrypt(Cc, CEK, iv, 'CTR'))
+    const M = _fromIn(aesDecrypt(Cc, CEK, 'CTR', iv))
     const Mhmac = _fromIn(hmacSHA256(M, CEK))
 
     const isValidMessage = Mhmac.every((v, i) => v === _Mhmac[i])
@@ -366,6 +374,8 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     sharedKey,
     messageDecrypt,
     messageEncrypt,
+    aesDecrypt,
+    aesEncrypt,
     split,
     concat,
   } as TWavesCrypto<T, S>

@@ -11,6 +11,8 @@ export interface IBinarySeed {
   nonce?: number
 }
 
+export type AESMode = 'CBC' | 'CFB' | 'CTR' | 'OFB' | 'ECB'
+
 /* Type aliases used to increase flexibility and be able
    to extend these types later on. Also type aliases allows
    names to be more self explanatory like in BASE58 case. */
@@ -102,6 +104,10 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
   verifySignature: (publicKey: TBinaryIn, bytes: TBinaryIn, signature: TBinaryIn) => boolean
   verifyPublicKey: (publicKey: TBinaryIn) => boolean
   verifyAddress: (address: TBinaryIn, optional?: { chainId?: TChainId, publicKey?: TBinaryIn }) => boolean
+
+  //Encryption
+  aesEncrypt: (data: TBinaryIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TDesiredOut
+  aesDecrypt: (encryptedMessage: TBinaryIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TDesiredOut
 
   //Messaging
   sharedKey: (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TRawStringIn) => TDesiredOut
