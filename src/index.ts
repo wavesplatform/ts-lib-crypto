@@ -334,7 +334,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
 
     const isValidKey = CEKhmac.every((v, i) => v === _CEKhmac[i])
     if (!isValidKey)
-      throw new Error('Invalid message')
+      throw new Error('Invalid key')
 
     const M = _fromIn(aesDecrypt(Cc, CEK, 'CTR', iv))
     const Mhmac = _fromIn(hmacSHA256(M, CEK))
@@ -374,8 +374,6 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     sharedKey,
     messageDecrypt,
     messageEncrypt,
-    aesDecrypt,
-    aesEncrypt,
     split,
     concat,
   } as TWavesCrypto<T, S>
