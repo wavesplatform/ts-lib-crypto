@@ -68,7 +68,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
 
   const c1 = <T1, R>(f: (a: T1) => R) => (a: T1) => () => f(a)
   const c2 = <T1, T2, R>(f: (a: T1, b: T2) => R) => (a: T1) => (b: T2) => f(a, b)
-  const c3 = <T1, T2, T3, R>(f: (a: T1, b: T2, c: T3) => R) => (a: T1) => (b: T2) => (c: T3) => f(a, b, c)
+  const c3 = <T1, T2, T3, R>(f: (a: T1, b: T2, c: T3) => R) => (a: T1) => (b: T2, c: T3) => f(a, b, c)
 
   const isWords = (val: any): val is Words =>
     (<CryptoJS.LibWordArray>val).words !== undefined ||
@@ -328,7 +328,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
       iv,
     ] = split(encryptedMessage, 48, 32, 32, 32, 16)
 
-    const CEK = _fromIn(aesDecrypt(Ccek, sharedKey))
+    const CEK = _fromIn(aesDecrypt(Ccek, sharedKey, 'ECB'))
 
     const CEKhmac = _fromIn(hmacSHA256(concat(CEK, iv), _fromIn(sharedKey)))
 
