@@ -3,7 +3,7 @@ import * as blake from './libs/blake2b'
 import { keccak256 } from './libs/sha3'
 import base58 from './libs/base58'
 import axlsign from './libs/axlsign'
-import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, IBinarySeed, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded, TEST_NET_CHAIN_ID, AESMode } from './crypto'
+import { IWavesCrypto, TBinaryIn, TBytes, TBase58, TBinaryOut, TBase64, TBase16, TKeyPair, TSeed, IBinarySeed, TPrivateKey, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, PUBLIC_KEY_LENGTH, TRawStringIn, ISeedRelated, ISeedEmbeded, TEST_NET_CHAIN_ID, AESMode, TRawStringInDiscriminator } from './crypto'
 import { secureRandom } from './random'
 import { words } from './words'
 
@@ -23,19 +23,24 @@ type Words = CryptoJS.LibWordArray | CryptoJS.WordArray | CryptoJS.DecryptedMess
 type TWavesCrypto<T extends TBinaryOut = TDefaultOut, S extends TSeed | undefined = undefined> =
   IWavesCrypto<T> & (S extends undefined ? ISeedRelated<T> : ISeedEmbeded<T>)
 
+const _concat = (...arrays: (TBinaryIn | Words)[]): TBytes =>
+  arrays.reduce<Uint8Array>((a, b) => Uint8Array.from([...a, ...(isWords(b) ? _fromWords(b) : _fromIn(b))]), new Uint8Array(0))
+
+const isTRawStringInDiscriminator = (val: TRawStringIn): val is TRawStringInDiscriminator => false
+
 const isSeedWithNonce = (val: any): val is IBinarySeed =>
   (<IBinarySeed>val).nonce !== undefined
 
 const isString = (val: any): val is string =>
   typeof val === 'string'
 
-const stringToBytes = (str: string): TBytes =>
+export const stringToBytes = (str: string): TBytes =>
   Uint8Array.from([...unescape(encodeURIComponent(str))].map(c => c.charCodeAt(0)))
 
 const isUint8Array = (val: Uint8Array | number[]): val is Uint8Array =>
   (<Uint8Array>val).buffer !== undefined
 
-const base58Decode = (input: TBase58): TBytes =>
+export const base58Decode = (input: TBase58): TBytes =>
   base58.decode(input)
 
 const _fromIn = (inValue: TBinaryIn): TBytes => {
@@ -48,7 +53,20 @@ const _fromIn = (inValue: TBinaryIn): TBytes => {
   return Uint8Array.from(inValue)
 }
 
-const bytesToString = (bytes: TBinaryIn): string =>
+const _fromRawIn = (inValue: TRawStringIn): TBytes => {
+  if (isTRawStringInDiscriminator(inValue))
+    throw new Error('')
+
+  if (isString(inValue))
+    return stringToBytes(inValue)
+
+  if (isUint8Array(inValue))
+    return inValue
+
+  return Uint8Array.from(inValue)
+}
+
+export const bytesToString = (bytes: TBinaryIn): string =>
   String.fromCharCode.apply(null, Array.from(_fromIn(bytes)))
 
 const aesModeMap: Record<AESMode, CryptoJS.Mode> = {
@@ -58,6 +76,150 @@ const aesModeMap: Record<AESMode, CryptoJS.Mode> = {
   'OFB': CryptoJS.mode.OFB,
   'ECB': CryptoJS.mode.ECB,
 }
+
+const _toWords = (arr: Uint8Array) => {
+  const len = arr.length
+  const words: any = []
+  for (let i = 0; i < len; i++) {
+    words[i >>> 2] |= (arr[i] & 0xff) << (24 - (i % 4) * 8)
+  }
+  return (CryptoJS.lib.WordArray.create as any)(words, len)
+}
+
+const _fromWords = (inValue: Words): TBytes => {
+  let words = (<any>inValue).words
+  let sigBytes = (<any>inValue).sigBytes
+
+  let u8 = new Uint8Array(sigBytes)
+  for (let i = 0; i < sigBytes; i++) {
+    let byte = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff
+    u8[i] = byte
+  }
+
+  return u8
+}
+
+export const seed = (seed: TSeed, nonce: number): IBinarySeed => ({ seed: Seed.toBinary(seed).seed, nonce })
+
+export const verifySignature = (publicKey: TBinaryIn, bytes: TBinaryIn, signature: TBinaryIn): boolean => {
+  try {
+    return axlsign.verify(_fromIn(publicKey), _fromIn(bytes), _fromIn(signature))
+  } catch (error) {
+    return false
+  }
+}
+
+export const verifyPublicKey = (publicKey: TBinaryIn): boolean => _fromIn(publicKey).length === PUBLIC_KEY_LENGTH
+
+export const aesEncrypt = (data: TRawStringIn, secret: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes =>
+  base64Decode(
+    CryptoJS.AES.encrypt(base64Encode(_fromRawIn(data)), bytesToString(secret),
+      {
+        iv: iv ? _toWords(_fromIn(iv)) : undefined,
+        mode: aesModeMap[mode],
+      })
+      .toString()
+  )
+
+export const aesDecrypt = (encryptedData: TBinaryIn, secret: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes =>
+  base64Decode(
+    CryptoJS.AES.decrypt(base64Encode(encryptedData), bytesToString(secret),
+      {
+        iv: iv ? _toWords(_fromIn(iv)) : undefined,
+        mode: aesModeMap[mode],
+      })
+      .toString(CryptoJS.enc.Utf8)
+  )
+
+export const base64Decode = (input: TBase64): TBytes =>
+  _fromWords(CryptoJS.enc.Base64.parse(input))
+
+export const base64Encode = (input: TBinaryIn): TBase64 =>
+  CryptoJS.enc.Base64.stringify(_toWords(_fromIn(input)))
+
+export const randomBytes = (length: number): TBytes =>
+  secureRandom(length, 'Uint8Array')
+
+export const randomSeed = (wordsCount: number = 15): string =>
+  secureRandom(wordsCount, 'Array32')
+    .map(x => words[x % words.length])
+    .join(' ')
+
+export const split = (binary: TBinaryIn, ...sizes: number[]): TBytes[] => {
+  const r = sizes.reduce<{ arr: TBytes, r: TBytes[] }>((a, s) => ({ arr: a.arr.slice(s), r: [...a.r, a.arr.slice(0, s)] }), { arr: _fromIn(binary), r: [] })
+  return [...r.r, r.arr]
+}
+
+
+export const base58Encode = (input: TBinaryIn): TBase58 =>
+  base58.encode(_fromIn(input))
+
+export const base16Encode = (input: TBinaryIn): TBase16 =>
+  CryptoJS.enc.Hex.stringify(_toWords(_fromIn(input)))
+
+export const base16Decode = (input: TBase16): TBytes =>
+  _fromWords(CryptoJS.enc.Hex.parse(input))
+
+const hmacSHA256 = (message: TBinaryIn, key: TBinaryIn): TBytes =>
+  _fromWords(CryptoJS.HmacSHA256(_toWords(_fromIn(message)), _toWords(_fromIn(key))))
+
+const messageEncrypt = (sharedKey: TBinaryIn, message: TRawStringIn): TBytes => {
+  const CEK = randomBytes(32)
+  const IV = randomBytes(16)
+  const m = _fromRawIn(message)
+
+  const Cc = aesEncrypt(m, CEK, 'CTR', IV)
+  const Ccek = aesEncrypt(CEK, sharedKey, 'ECB')
+  const Mhmac = hmacSHA256(m, CEK)
+  const CEKhmac = hmacSHA256(_concat(CEK, IV), sharedKey)
+
+  const packageBytes = _concat(
+    Ccek,
+    CEKhmac,
+    Mhmac,
+    IV,
+    Cc
+  )
+
+  debugger
+
+  return packageBytes
+}
+
+const messageDecrypt = (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn): string => {
+
+  const [
+    Ccek,
+    _CEKhmac,
+    _Mhmac,
+    iv,
+    Cc,
+  ] = split(encryptedMessage, 64, 32, 32, 16)
+
+
+  debugger
+
+  const CEK = aesDecrypt(Ccek, sharedKey, 'ECB')
+
+  const CEKhmac = _fromIn(hmacSHA256(_concat(CEK, iv), _fromIn(sharedKey)))
+
+  const isValidKey = CEKhmac.every((v, i) => v === _CEKhmac[i])
+  if (!isValidKey)
+    throw new Error('Invalid key')
+
+  const M = aesDecrypt(Cc, CEK, 'CTR', iv)
+  const Mhmac = _fromIn(hmacSHA256(M, CEK))
+
+  const isValidMessage = Mhmac.every((v, i) => v === _Mhmac[i])
+  if (!isValidMessage)
+    throw new Error('Invalid message')
+
+  return String.fromCharCode.apply(null, Array.from(M))
+}
+
+const isWords = (val: any): val is Words =>
+  (<CryptoJS.LibWordArray>val).words !== undefined ||
+  (<CryptoJS.WordArray>val).key !== undefined
 
 export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | undefined = undefined>(options?: TOptions<TOut, S>): TWavesCrypto<TTypesMap[TOut], S> => {
 
@@ -70,67 +232,22 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
   const c2 = <T1, T2, R>(f: (a: T1, b: T2) => R) => (a: T1) => (b: T2) => f(a, b)
   const c3 = <T1, T2, T3, R>(f: (a: T1, b: T2, c: T3) => R) => (a: T1) => (b: T2, c: T3) => f(a, b, c)
 
-  const isWords = (val: any): val is Words =>
-    (<CryptoJS.LibWordArray>val).words !== undefined ||
-    (<CryptoJS.WordArray>val).key !== undefined
-
-
   const isPublicKey = <T extends TBinaryIn>(val: any): val is TPublicKey<T> =>
     (<TPublicKey>val).publicKey !== undefined
 
   const isPrivateKey = <T extends TBinaryIn>(val: any): val is TPrivateKey<T> =>
     (<TPrivateKey>val).privateKey !== undefined
 
-  const split = (binary: TBinaryIn, ...sizes: number[]): TBytes[] => {
-    const r = sizes.reduce<{ arr: TBytes, r: TBytes[] }>((a, s) => ({ arr: a.arr.slice(s), r: [...a.r, a.arr.slice(0, s)] }), { arr: _fromIn(binary), r: [] })
-    return [...r.r, r.arr]
-  }
-
   const _hashChain = (input: TBytes): TBytes =>
     _fromIn(keccak(blake2b(input)))
 
-  const _toWords = (arr: Uint8Array) => {
-    const len = arr.length
-    const words: any = []
-    for (let i = 0; i < len; i++) {
-      words[i >>> 2] |= (arr[i] & 0xff) << (24 - (i % 4) * 8)
-    }
-    return (CryptoJS.lib.WordArray.create as any)(words, len)
-  }
-
-  const _fromWords = (inValue: Words): TBytes => {
-    let words = (<any>inValue).words
-    let sigBytes = (<any>inValue).sigBytes
-
-    let u8 = new Uint8Array(sigBytes)
-    for (let i = 0; i < sigBytes; i++) {
-      let byte = (words[i >>> 2] >>> (24 - (i % 4) * 8)) & 0xff
-      u8[i] = byte
-    }
-
-    return u8
-  }
-
-
-  const _fromRawIn = (inValue: TBinaryIn): TBytes => {
-    if (isString(inValue))
-      return stringToBytes(inValue)
-
-    if (isUint8Array(inValue))
-      return inValue
-
-    return Uint8Array.from(inValue)
-  }
-
-  const _toOut = (bytes: TBytes): T => {
+  const _toOut = <TOut extends TOutput = TDefaultOut>(bytes: TBytes): TTypesMap[TOut] => {
     if (options && options.output) {
-      return (options.output === 'Base58' ? base58Encode(bytes) : bytes) as T
+      return (options.output === 'Base58' ? base58Encode(bytes) : bytes) as TTypesMap[TOut]
     }
-    return base58Encode(bytes) as T
+    return base58Encode(bytes) as TTypesMap[TOut]
   }
 
-  const _concat = (...arrays: (TBinaryIn | Words)[]): TBytes =>
-    arrays.reduce<Uint8Array>((a, b) => Uint8Array.from([...a, ...(isWords(b) ? _fromWords(b) : _fromIn(b))]), new Uint8Array(0))
 
   const concat = (...arrays: TBinaryIn[]): T =>
     _toOut(arrays.reduce<Uint8Array>((a, b) => Uint8Array.from([...a, ..._fromIn(b)]), new Uint8Array(0)))
@@ -149,20 +266,6 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     return _toOut(_fromWords(resultWordArray))
   }
 
-  const base64Encode = (input: TBinaryIn): TBase64 =>
-    CryptoJS.enc.Base64.stringify(_toWords(_fromIn(input)))
-
-  const base64Decode = (input: TBase64): TBytes =>
-    _fromWords(CryptoJS.enc.Base64.parse(input))
-
-  const base58Encode = (input: TBinaryIn): TBase58 =>
-    base58.encode(_fromIn(input))
-
-  const base16Encode = (input: TBinaryIn): TBase16 =>
-    CryptoJS.enc.Hex.stringify(_toWords(_fromIn(input)))
-
-  const base16Decode = (input: TBase16): TBytes =>
-    _fromWords(CryptoJS.enc.Hex.parse(input))
 
   const buildSeedHash = (seedBytes: Uint8Array, nonce?: number): Uint8Array => {
     const nonceArray = [0, 0, 0, 0]
@@ -208,13 +311,6 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
       buildAddress(_fromIn(seedOrPublicKey.publicKey), chainId) :
       address(keyPair(seedOrPublicKey), chainId)
 
-  const randomBytes = (length: number): TBytes =>
-    secureRandom(length, 'Uint8Array')
-
-  const randomSeed = (wordsCount: number = 15): string =>
-    secureRandom(wordsCount, 'Array32')
-      .map(x => words[x % words.length])
-      .join(' ')
 
   const signBytes = (seedOrPrivateKey: TSeed | TPrivateKey<TBinaryIn>, bytes: TBinaryIn, random?: TBinaryIn): T =>
     _toOut(
@@ -224,15 +320,6 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
         _fromIn(bytes), random || randomBytes(64))
     )
 
-  const verifySignature = (publicKey: TBinaryIn, bytes: TBinaryIn, signature: TBinaryIn): boolean => {
-    try {
-      return axlsign.verify(_fromIn(publicKey), _fromIn(bytes), _fromIn(signature))
-    } catch (error) {
-      return false
-    }
-  }
-
-  const verifyPublicKey = (publicKey: TBinaryIn): boolean => _fromIn(publicKey).length === PUBLIC_KEY_LENGTH
 
   const verifyAddress = (addr: TBinaryIn, optional?: { chainId?: TChainId, publicKey?: TBinaryIn }): boolean => {
 
@@ -263,87 +350,10 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     return true
   }
 
-  const seed = (seed: TSeed, nonce: number): IBinarySeed => ({ seed: Seed.toBinary(seed).seed, nonce })
-
-  const aesEncrypt = (data: TBinaryIn, secret: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): T =>
-    _toOut(
-      base64Decode(
-        CryptoJS.AES.encrypt(_toWords(_fromIn(data)), _toWords(_fromIn(secret)),
-          {
-            iv: iv ? _toWords(_fromIn(iv)) : undefined,
-            mode: aesModeMap[mode],
-          })
-          .toString()
-      )
-    )
-
-  const aesDecrypt = (encryptedMessage: TBinaryIn, secret: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): T =>
-    _toOut(
-      _fromWords(
-        CryptoJS.AES.decrypt(base64Encode(encryptedMessage), _toWords(_fromIn(secret)),
-          {
-            iv: iv ? _toWords(_fromIn(iv)) : undefined,
-            mode: aesModeMap[mode],
-          })
-      )
-    )
-
-  const hmacSHA256 = (message: TBinaryIn, key: TBinaryIn): T =>
-    _toOut(_fromWords(CryptoJS.HmacSHA256(_toWords(_fromIn(message)), _toWords(_fromIn(key)))))
-
   const sharedKey = (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TRawStringIn): T => {
     const sharedKey = axlsign.sharedKey(_fromIn(privateKeyFrom), _fromIn(publicKeyTo))
     const prefixHash = sha256(_fromRawIn(prefix))
-    return hmacSHA256(sharedKey, prefixHash)
-  }
-
-  const messageEncrypt = (sharedKey: TBinaryIn, message: TRawStringIn): T => {
-    const CEK = randomBytes(32)
-    const IV = randomBytes(16)
-    const m = _fromRawIn(message)
-
-    const Cc = aesEncrypt(m, CEK, 'CTR', IV)
-    const Ccek = aesEncrypt(CEK, sharedKey, 'ECB')
-    const Mhmac = hmacSHA256(m, CEK)
-    const CEKhmac = hmacSHA256(concat(CEK, IV), sharedKey)
-
-    const packageBytes = _concat(
-      Ccek,
-      CEKhmac,
-      Cc,
-      Mhmac,
-      IV
-    )
-
-    return _toOut(packageBytes)
-  }
-
-  const messageDecrypt = (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn): string => {
-
-    const [
-      Ccek,
-      _CEKhmac,
-      Cc,
-      _Mhmac,
-      iv,
-    ] = split(encryptedMessage, 48, 32, 32, 32, 16)
-
-    const CEK = _fromIn(aesDecrypt(Ccek, sharedKey, 'ECB'))
-
-    const CEKhmac = _fromIn(hmacSHA256(concat(CEK, iv), _fromIn(sharedKey)))
-
-    const isValidKey = CEKhmac.every((v, i) => v === _CEKhmac[i])
-    if (!isValidKey)
-      throw new Error('Invalid key')
-
-    const M = _fromIn(aesDecrypt(Cc, CEK, 'CTR', iv))
-    const Mhmac = _fromIn(hmacSHA256(M, CEK))
-
-    const isValidMessage = Mhmac.every((v, i) => v === _Mhmac[i])
-    if (!isValidMessage)
-      throw new Error('Invalid message')
-
-    return String.fromCharCode.apply(null, Array.from(M))
+    return _toOut(hmacSHA256(sharedKey, prefixHash))
   }
 
   const s = (options && options.seed) ? options.seed as TSeed : undefined
@@ -374,6 +384,8 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     sharedKey,
     messageDecrypt,
     messageEncrypt,
+    aesDecrypt,
+    aesEncrypt,
     split,
     concat,
   } as TWavesCrypto<T, S>
@@ -387,7 +399,7 @@ export const Seed = {
     if (isString(seed))
       return { seed: stringToBytes(seed), nonce: undefined }
 
-    return { seed: _fromIn(seed), nonce: undefined }
+    return { seed: _fromRawIn(seed), nonce: undefined }
   },
   toString(seed: TSeed): string {
     return bytesToString(Seed.toBinary(seed).seed)

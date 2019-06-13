@@ -1,6 +1,7 @@
-import { crypto, MAIN_NET_CHAIN_ID } from '../src/index'
+import { crypto, MAIN_NET_CHAIN_ID, aesEncrypt, aesDecrypt } from '../src/index'
+import * as CryptoJS from 'crypto-js'
 
-const { seed, address, sharedKey, messageEncrypt, messageDecrypt, randomBytes, bytesToString, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode } = crypto({ output: 'Base58' })
+const { seed, address, concat, split, sharedKey, messageEncrypt, messageDecrypt, randomBytes, bytesToString, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode } = crypto({ output: 'Base58' })
 
 const s = '1f98af466da54014bdc08bfbaaaf3c67'
 
@@ -116,5 +117,45 @@ test('encrypt and decrypt message roundtrip', () => {
   const message = messageDecrypt(sk, encryptedMessage)
 
   expect(message).toEqual(originalMessage)
+})
+
+test('concat split roundtrip', () => {
+  const a = base58Encode([1, 2, 3, 4])
+  const b = [5, 6, 7]
+  const c = Uint8Array.from([8, 9])
+
+  const cc = concat(a, b, c)
+  const [a2, b2, c2] = split(cc, 4, 3, 2)
+
+  expect(a2).toEqual(Uint8Array.from([1, 2, 3, 4]))
+  expect(b2).toEqual(Uint8Array.from(b))
+  expect(c2).toEqual(c)
+})
+
+
+test('encrypt and decrypt aes roundtrip', () => {
+  const prefix = 'waves'
+  const a = keyPair(s)
+  const b = keyPair(s + s)
+  const sk = sharedKey(a.privateKey, b.publicKey, prefix)
+
+  const message = 'message'
+  const enc = aesEncrypt(message, sk, 'ECB')
+  const decoded = bytesToString(aesDecrypt(enc, sk, 'ECB'))
+  expect(message).toEqual(decoded)
+})
+
+test('crypto js', () => {
+  const bytes = randomBytes(32)
+  const prefix = 'waves'
+  const a = keyPair(s)
+  const b = keyPair(s + s)
+  const sk = sharedKey(a.privateKey, b.publicKey, prefix)
+
+  const enc = base64Decode(CryptoJS.AES.encrypt(base64Encode(bytes), bytesToString(sk), { mode: CryptoJS.mode.ECB }).toString())
+  const result = base64Decode(CryptoJS.AES.decrypt(base64Encode(enc), bytesToString(sk), { mode: CryptoJS.mode.ECB }).toString(CryptoJS.enc.Utf8))
+
+  expect(bytes).toEqual(result)
+
 })
 

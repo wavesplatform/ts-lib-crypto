@@ -1,10 +1,11 @@
 {
   "compilerOptions": {
-    "target": "esnext",
+    "target": "es5",
     "lib": [
-      "es6",
+      "esnext",
       "dom"
     ],
+    "downlevelIteration": true,
     "declaration": true,
     "sourceMap": true,
     //"allowJs": true,

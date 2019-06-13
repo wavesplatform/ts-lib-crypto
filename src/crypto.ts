@@ -1,4 +1,3 @@
-
 export const PUBLIC_KEY_LENGTH = 32
 export const PRIVATE_KEY_LENGTH = 32
 export const SIGNATURE_LENGTH = 64
@@ -28,8 +27,10 @@ export type TChainId = string | number
 //Every binary parameter could be represented as Uint8Array or number[] or base58 string
 export type TBinaryIn = TBytes | TBase58 | number[]
 
+export type TRawStringInDiscriminator = { TRawStringIn: null }
+
 //Every input stinrg could be represented as Uint8Array or number[] or a string itself
-export type TRawStringIn = TBytes | string | number[]
+export type TRawStringIn = TBytes | string | number[] | TRawStringInDiscriminator
 
 export type TBinaryOut = TBytes | TBase58
 
@@ -109,6 +110,10 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
   sharedKey: (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TRawStringIn) => TDesiredOut
   messageDecrypt: (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn) => string
   messageEncrypt: (sharedKey: TBinaryIn, message: TRawStringIn) => TDesiredOut
+
+  //Encryption
+  aesEncrypt: (data: TRawStringIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
+  aesDecrypt: (encryptedData: TBinaryIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
 }
 
 
