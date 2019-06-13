@@ -111,9 +111,9 @@ export const verifySignature = (publicKey: TBinaryIn, bytes: TBinaryIn, signatur
 
 export const verifyPublicKey = (publicKey: TBinaryIn): boolean => _fromIn(publicKey).length === PUBLIC_KEY_LENGTH
 
-export const aesEncrypt = (data: TRawStringIn, secret: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes =>
+export const aesEncrypt = (data: TRawStringIn, secret: TRawStringIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes =>
   base64Decode(
-    CryptoJS.AES.encrypt(base64Encode(_fromRawIn(data)), bytesToString(secret),
+    CryptoJS.AES.encrypt(_toWords(_fromRawIn(data)), bytesToString(_fromRawIn(secret)),
       {
         iv: iv ? _toWords(_fromIn(iv)) : undefined,
         mode: aesModeMap[mode],
@@ -121,14 +121,13 @@ export const aesEncrypt = (data: TRawStringIn, secret: TBinaryIn, mode: AESMode 
       .toString()
   )
 
-export const aesDecrypt = (encryptedData: TBinaryIn, secret: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes =>
-  base64Decode(
-    CryptoJS.AES.decrypt(base64Encode(encryptedData), bytesToString(secret),
+export const aesDecrypt = (encryptedData: TBinaryIn, secret: TRawStringIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes =>
+  _fromWords(
+    CryptoJS.AES.decrypt(base64Encode(encryptedData), bytesToString(_fromRawIn(secret)),
       {
         iv: iv ? _toWords(_fromIn(iv)) : undefined,
         mode: aesModeMap[mode],
       })
-      .toString(CryptoJS.enc.Utf8)
   )
 
 export const base64Decode = (input: TBase64): TBytes =>

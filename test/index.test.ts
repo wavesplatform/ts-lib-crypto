@@ -145,6 +145,16 @@ test('encrypt and decrypt aes roundtrip', () => {
   expect(message).toEqual(decoded)
 })
 
+test('aes decrypt backward compatibility check', () => {
+  const encrypted = 'U2FsdGVkX19tuxILcDC5gj/GecPmDGEc2l51pCwdBOdtVclJ5rMT4M3Ns9Q+G4rV8wzrVTkhc/nnne5iI9ki/5uEqkGDheAi8xjQTF+MY4Q='
+  const decrypted = 'asd asd asd asd asd asd asd asd asd asd asd asd1'
+  const key = '51ce198988d0cd5a4176ab3b695351372c18912d3b613ed4496f7ce4b70e29ac'
+
+  const d = bytesToString(aesDecrypt(base64Decode(encrypted), key))
+
+  expect(d).toEqual(decrypted)
+})
+
 test('crypto js', () => {
   const bytes = randomBytes(32)
   const prefix = 'waves'
