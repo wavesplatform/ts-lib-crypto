@@ -1,10 +1,9 @@
-import { TSeed, IBinarySeed, TBytes, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, TBinaryIn, TBase58, TKeyPair } from './interface'
+import { TSeed, IBinarySeed, TBytes, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, TBinaryIn, TKeyPair } from './interface'
 import { Seed } from './seed-extension'
 import { _hashChain, sha256 } from './hashing'
 import { _fromIn } from './conversions/param'
 import { concat } from './concat-split'
 import { isPublicKey } from './util'
-import { base58Encode } from './conversions/base-xx'
 import axlsign from './libs/axlsign'
 
 export const seed = (seed: TSeed, nonce: number): IBinarySeed => ({ seed: Seed.toBinary(seed).seed, nonce })
