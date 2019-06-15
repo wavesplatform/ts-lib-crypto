@@ -132,7 +132,6 @@ test('concat split roundtrip', () => {
   expect(c2).toEqual(c)
 })
 
-
 test('encrypt and decrypt aes roundtrip', () => {
   const prefix = 'waves'
   const a = keyPair(s)

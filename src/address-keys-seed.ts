@@ -1,0 +1,55 @@
+import { TSeed, IBinarySeed, TBytes, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, TBinaryIn, TBase58, TKeyPair } from './interface'
+import { Seed } from './seed-extension'
+import { _hashChain, sha256 } from './hashing'
+import { _fromIn } from './conversions/param'
+import { concat } from './concat-split'
+import { isPublicKey } from './util'
+import { base58Encode } from './conversions/base-xx'
+import axlsign from './libs/axlsign'
+
+export const seed = (seed: TSeed, nonce: number): IBinarySeed => ({ seed: Seed.toBinary(seed).seed, nonce })
+
+const buildAddress = (publicKeyBytes: TBytes, chainId: TChainId = MAIN_NET_CHAIN_ID): TBytes => {
+  const prefix = [1, typeof chainId === 'string' ? chainId.charCodeAt(0) : chainId]
+  const publicKeyHashPart = _hashChain(publicKeyBytes).slice(0, 20)
+  const rawAddress = concat(prefix, publicKeyHashPart)
+  const addressHash = _hashChain(rawAddress).slice(0, 4)
+  return concat(rawAddress, addressHash)
+}
+
+const buildSeedHash = (seedBytes: Uint8Array, nonce?: number): TBytes => {
+  const nonceArray = [0, 0, 0, 0]
+  if (nonce && nonce > 0) {
+    let remainder = nonce
+    for (let i = 3; i >= 0; i--) {
+      nonceArray[3 - i] = Math.floor(remainder / 2 ** (i * 8))
+      remainder = remainder % 2 ** (i * 8)
+    }
+  }
+  const seedBytesWithNonce = concat(nonceArray, seedBytes)
+  const seedHash = _hashChain(seedBytesWithNonce)
+  return _fromIn(sha256(seedHash))
+}
+
+export const keyPair = (seed: TSeed): TKeyPair<TBytes> => {
+  const { seed: seedBytes, nonce } = Seed.toBinary(seed)
+
+  const seedHash = buildSeedHash(seedBytes, nonce)
+  const { keys } = axlsign.generateKeyPair(seedHash)
+
+  return {
+    privateKey: keys.private,
+    publicKey: keys.public,
+  }
+}
+
+export const address = (seedOrPublicKey: TSeed | TPublicKey<TBinaryIn>, chainId: TChainId = MAIN_NET_CHAIN_ID): TBytes =>
+  isPublicKey(seedOrPublicKey) ?
+    buildAddress(_fromIn(seedOrPublicKey.publicKey), chainId) :
+    address(keyPair(seedOrPublicKey), chainId)
+
+export const publicKey = (seed: TSeed): TBytes =>
+  keyPair(seed).publicKey
+
+export const privateKey = (seed: TSeed): TBytes =>
+  keyPair(seed).privateKey
