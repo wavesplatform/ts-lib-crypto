@@ -35,7 +35,7 @@ export const keyPair = (seed: TSeed): TKeyPair<TBytes> => {
   const { seed: seedBytes, nonce } = Seed.toBinary(seed)
 
   const seedHash = buildSeedHash(seedBytes, nonce)
-  const { keys } = axlsign.generateKeyPair(seedHash)
+  const keys = axlsign.generateKeyPair(seedHash)
 
   return {
     privateKey: keys.private,
