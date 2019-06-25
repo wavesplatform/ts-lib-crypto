@@ -1,4 +1,4 @@
-import { TSeed, IBinarySeed, TBytes, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, TBinaryIn, TKeyPair } from './interface'
+import { TSeed, INonceSeed, TBytes, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, TBinaryIn, TKeyPair } from './interface'
 import { Seed } from '../extensions/seed'
 import { _hashChain, sha256 } from './hashing'
 import { _fromIn } from '../conversions/param'
@@ -6,7 +6,7 @@ import { concat } from './concat-split'
 import { isPublicKey } from './util'
 import axlsign from '../libs/axlsign'
 
-export const seed = (seed: TSeed, nonce: number): IBinarySeed => ({ seed: Seed.toBinary(seed).seed, nonce })
+export const seedWithNonce = (seed: TSeed, nonce: number): INonceSeed => ({ seed: Seed.toBinary(seed).seed, nonce })
 
 const buildAddress = (publicKeyBytes: TBytes, chainId: TChainId = MAIN_NET_CHAIN_ID): TBytes => {
   const prefix = [1, typeof chainId === 'string' ? chainId.charCodeAt(0) : chainId]

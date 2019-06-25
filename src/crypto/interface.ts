@@ -6,7 +6,7 @@ export const ADDRESS_LENGTH = 26
 export const MAIN_NET_CHAIN_ID = 87 //W
 export const TEST_NET_CHAIN_ID = 84 //T
 
-export interface IBinarySeed {
+export interface INonceSeed {
   seed: TBytes
   nonce?: number
 }
@@ -44,7 +44,7 @@ export type TPrivateKey<T extends TBinaryIn = TBase58> = { privateKey: T }
 export type TKeyPair<T extends TBinaryIn = TBase58> = TPublicKey<T> & TPrivateKey<T>
 
 //TSeed is a union of types that could represent a Waves seed.
-export type TSeed = TRawStringIn | IBinarySeed
+export type TSeed = TRawStringIn | INonceSeed
 
 /* Consider that every method should handle TSeed
    seamlessly so in case of absence of type union operator
@@ -56,7 +56,7 @@ export type TSeed = TRawStringIn | IBinarySeed
 
 export interface ISeedRelated<TDesiredOut extends TBinaryOut = TBase58> {
   //Seeds, keys and addresses
-  seed: (seed: TSeed, nonce: number) => IBinarySeed
+  seedWithNonce: (seed: TSeed, nonce: number) => INonceSeed
   keyPair: (seed: TSeed) => TKeyPair<TDesiredOut>
   publicKey: (seed: TSeed) => TDesiredOut
   privateKey: (seed: TSeed) => TDesiredOut
@@ -68,6 +68,7 @@ export interface ISeedRelated<TDesiredOut extends TBinaryOut = TBase58> {
 
 export interface ISeedEmbeded<TDesiredOut extends TBinaryOut = TBase58> {
   //Seeds, keys and addresses
+  seedWithNonce: (nonce: number) => INonceSeed
   keyPair: () => TKeyPair<TDesiredOut>
   publicKey: () => TDesiredOut
   privateKey: () => TDesiredOut

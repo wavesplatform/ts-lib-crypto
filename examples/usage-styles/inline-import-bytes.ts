@@ -13,6 +13,6 @@
 
 import { address } from '@waves/waves-crypto/bytes'
 
-const seed = 'secret seed'
+const seed = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
 
 address(seed) //Uint8Array [1,87,55,118,79,89,6,115,207,200,130,220,32,33,101,69,108,108,53,48,167,127,203,18,143,121]

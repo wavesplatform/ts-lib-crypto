@@ -2,7 +2,7 @@ import { crypto } from '@waves/waves-crypto'
 
 const { randomSeed, address, publicKey, privateKey, keyPair } = crypto()
 
-const seed = randomSeed()
+const seed = randomSeed() // uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine
 
 address(seed) // 3PAP3wkgbGjdd1FuBLn9ajXvo6edBMCa115
 

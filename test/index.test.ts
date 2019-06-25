@@ -1,14 +1,14 @@
 import { crypto } from '../src/crypto/crypto'
 import { MAIN_NET_CHAIN_ID } from '../src/crypto/interface'
 
-const { seed, aesDecrypt, address, concat, split, sharedKey, messageEncrypt, messageDecrypt, randomBytes, bytesToString, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode } = crypto({ output: 'Base58' })
+const { seedWithNonce, aesDecrypt, address, concat, split, sharedKey, messageEncrypt, messageDecrypt, randomBytes, bytesToString, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode } = crypto({ output: 'Base58' })
 
 const s = '1f98af466da54014bdc08bfbaaaf3c67'
 
 test('address from seed with nonce', () => {
-  const n1 = address(seed(s, 1))
-  const n2 = address(seed(s, 2))
-  const n3 = address(seed(s, 3))
+  const n1 = address(seedWithNonce(s, 1))
+  const n2 = address(seedWithNonce(s, 2))
+  const n3 = address(seedWithNonce(s, 3))
 
   expect(n1).toBe('3PMGVGocJt176sS1i6z3n7Xwot7w8hhqSU7')
   expect(n2).toBe('3P2BDW7MvwxhekbpStoF3byXtqiJnSByuTa')

@@ -16,7 +16,7 @@ export const {
   keccak,
   sha256,
   sharedKey,
-  seed,
+  seedWithNonce,
   base64Encode,
   base64Decode,
   base58Encode,

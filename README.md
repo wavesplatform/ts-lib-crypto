@@ -62,6 +62,29 @@ import { crypto } from  '@waves/waves-crypto'
 const { address } = crypto({seed: 'my secret seed'})
 address() // 3PAP3wkgbGjdd1FuBLn9ajXvo6edBMCa115
 ```
+
+# Inputs 
+The [lib-name] is even more flexible. Any function argument that represents binary data or seed could be passed in several ways. Let's take a look on the following example:
+```ts
+import { address } from  '@waves/waves-crypto'
+const  seedString  =  'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
+const  seedBytesAsArray  = [117, 110, 99, 108, 101, 32, 112, 117, 115, 104, 32, 104, 117, 109, 97, 110, 32, 98, 117, 115, 32, 101, 99, 104, 111, 32, 100, 114, 97, 115, 116, 105, 99, 32, 103, 97, 114, 100, 101, 110, 32, 106, 111, 107, 101, 32, 115, 97, 110, 100, 32, 119, 97, 114, 102, 97, 114, 101, 32, 115, 101, 110, 116, 101, 110, 99, 101, 32, 102, 111, 115, 115, 105, 108, 32, 116, 105, 116, 108, 101, 32, 99, 111, 108, 111, 114, 32, 99, 111, 109, 98, 105, 110, 101]
+const  seedBytesAsUintArray  =  Uint8Array.from(seedBytesAsArray)
+address(seedString) // 3P9KR33QyXwfTXv8kKtNGZYtgKk3RXSUk36
+address(seedBytesAsArray) // 3P9KR33QyXwfTXv8kKtNGZYtgKk3RXSUk36
+address(seedBytesAsUintArray) // 3P9KR33QyXwfTXv8kKtNGZYtgKk3RXSUk36
+```
+As you can see **seed** parameter is treated the same way for **number[]** or **Uint8Array**.
+When you pass binary data is could be represented as  **number[]** or **Uint8Array** or even **base58**:
+```ts
+import { address, randomSeed, sha256 } from '@waves/waves-crypto'
+const seed = randomSeed() // uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine
+const addressBase58 = address(seed) // 3P9KR33QyXwfTXv8kKtNGZYtgKk3RXSUk36
+sha256(addressBase58) // DMPenguwWdLdZ7tesiZY6grw7mjKU2Dob1cn9Uq9TKfp
+```
+Here we got **sha256** hash from address bytes represented as **base58** *(3P9KR33QyXwfTXv8kKtNGZYtgKk3RXSUk36)*. 
+Be aware that **sha256** value is not based on "*3P9KR33QyXwfTXv8kKtNGZYtgKk3RXSUk36*" string itself, this value was treated as a **binary data** and **base58Decode** was applied.
+
 # Outputs
 As you've noticed from the previous section *address()* output is **base58** string like:
 ```ts
@@ -85,17 +108,18 @@ If you prefer **binary** output, you can alter this behaviour and make those fun
 
 When using inline import style:
 ```ts
-// You can use /bytes module when importing functions to set output to UInt8Array
+// You can use [/bytes] module when importing functions to set output to UInt8Array
 import { address } from  '@waves/waves-crypto/bytes'
-address('my secret seed') //Uint8Array [1,87,55,118,79,89,6,115,207,200,130,220,32,33,101,69,108,108,53,48,167,127,203,18,143,121]
+address('uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine')
+// => Uint8Array [1,87,55,118,79,89,6,115,207,200,130,220,32,33,101,69,108,108,53,48,167,127,203,18,143,121]
 ```
 When using crypto constructor function:
 ```ts
 import { crypto } from  '@waves/waves-crypto'
 const { address } = crypto({ output: 'Bytes' })
-address('my secret seed') //Uint8Array [1,87,55,118,79,89,6,115,207,200,130,220,32,33,101,69,108,108,53,48,167,127,203,18,143,121]
+address('uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine')
+// => Uint8Array [1,87,55,118,79,89,6,115,207,200,130,220,32,33,101,69,108,108,53,48,167,127,203,18,143,121]
 ```
-
 
 # Seed generation
 
@@ -104,8 +128,25 @@ The usual Waves seed looks like:
 ```
 uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine
 ```
-But seed could be any string or bytes.
-The are several ways to generate seed using [lib-name]:
+There are couple ways to create seed: 
+```ts
+const handWrittenSeedString = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
+const handWrittenSeedBytes = [117, 110, 99, 108, 101, 32, 112, 117, 115, 104, 32, 104, 117, 109, 97, 110, 32, 98, 117, 115, 32, 101, 99, 104, 111, 32, 100, 114, 97, 115, 116, 105, 99, 32, 103, 97, 114, 100, 101, 110, 32, 106, 111, 107, 101, 32, 115, 97, 110, 100, 32, 119, 97, 114, 102, 97, 114, 101, 32, 115, 101, 110, 116, 101, 110, 99, 101, 32, 102, 111, 115, 115, 105, 108, 32, 116, 105, 116, 108, 101, 32, 99, 111, 108, 111, 114, 32, 99, 111, 109, 98, 105, 110, 101]
+```
+If you need seed with nonce:
+```ts
+import { seedWithNonce, randomSeed, address } from '@waves/waves-crypto'
+
+const nonce = 1
+const seedphrase = randomSeed() // uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine
+const seed = seedWithNonce(seedphrase, nonce)
+
+//Now you can use seed as usual
+address(seed)
+```
+Seed could be any **string** or **number[]** or **Uint8Array** or **ISeedWithNonce**.
+
+The is also a way to generate seed-phrase using [lib-name] described in the next section.
 
 ### randomSeed
 ```ts
@@ -113,7 +154,6 @@ import { randomSeed } from  '@waves/waves-crypto'
 
 randomSeed() //uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine
 ```
-
 You can also specify seed size:
 ```ts
 randomSeed(3) //uncle push human
@@ -128,4 +168,10 @@ console.log(seedWordsList) // [ 'abandon','ability','able', ... 2045 more items 
 ```
 # Keys and address
 
-... to be continued 
+#### publicKey
+You can get public key either from seed or private key:
+```ts
+import { publicKey } from '@waves/waves-crypto'
+const  seed = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
+publicKey(seed) // 4KxUVD9NtyRJjU3BCvPgJSttoJX7cb3DMdDTNucLN121
+```

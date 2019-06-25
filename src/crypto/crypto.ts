@@ -6,7 +6,7 @@ import { _fromIn, _toWords, _fromRawIn, _fromWords } from '../conversions/param'
 import { bytesToString, stringToBytes } from '../conversions/string-bytes'
 import { concat, split } from './concat-split'
 import { _hashChain, sha256, keccak, blake2b } from './hashing'
-import { privateKey, address, publicKey, keyPair, seed } from './address-keys-seed'
+import { privateKey, address, publicKey, keyPair, seedWithNonce } from './address-keys-seed'
 import { signBytes } from './sign'
 import { verifyAddress, verifyPublicKey, verifySignature } from './verification'
 
@@ -55,7 +55,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     keccak: toOut(keccak),
     sha256: toOut(sha256),
     sharedKey: toOut(sharedKey),
-    seed,
+    seedWithNonce: s ? c2(seedWithNonce)(s) : seedWithNonce,
     base64Encode,
     base64Decode,
     base58Encode,
