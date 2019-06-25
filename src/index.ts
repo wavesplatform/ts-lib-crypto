@@ -1,4 +1,4 @@
-import { IWavesCrypto, TBytes, TBinaryOut, TSeed, ISeedRelated, ISeedEmbeded } from './interface'
+import { IWavesCrypto, TBytes, TBinaryOut, TSeed, ISeedRelated, ISeedEmbeded, TKeyPair } from './interface'
 import { randomBytes, randomSeed } from './random'
 import { aesEncrypt, aesDecrypt, messageDecrypt, messageEncrypt, sharedKey } from './encryption'
 import { base58Encode, base64Decode, base64Encode, base16Decode, base16Encode, base58Decode } from './conversions/base-xx'
@@ -42,17 +42,23 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     return (!options || options && options.output === 'Base58') ? base58Encode(r) : r
   }
 
+  const toOutKey = (f: Function) => (...args: any[]): TKeyPair => {
+    const r = f(...args) as TKeyPair
+    return (!options || options && options.output === 'Base58') ? ({ privateKey: base58Encode(r.privateKey), publicKey: base58Encode(r.publicKey) }) : r
+  }
+
   const s = (options && options.seed) ? options.seed as TSeed : undefined
 
   return <unknown>{
     signBytes: toOut(s ? c3(signBytes)(s) : signBytes),
-    keyPair: toOut(s ? c1(keyPair)(s) : keyPair),
+    keyPair: toOutKey(s ? c1(keyPair) : keyPair),
     publicKey: toOut(s ? c1(publicKey)(s) : publicKey),
     privateKey: toOut(s ? c1(privateKey)(s) : privateKey),
     address: toOut(s ? c2(address)(s) : address),
     blake2b: toOut(blake2b),
     keccak: toOut(keccak),
     sha256: toOut(sha256),
+    sharedKey: toOut(sharedKey),
     seed,
     base64Encode,
     base64Decode,
@@ -67,7 +73,6 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     verifySignature,
     verifyPublicKey,
     verifyAddress,
-    sharedKey,
     messageDecrypt,
     messageEncrypt,
     aesDecrypt,

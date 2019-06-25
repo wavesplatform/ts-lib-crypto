@@ -132,17 +132,7 @@ test('concat split roundtrip', () => {
   expect(c2).toEqual(c)
 })
 
-test('encrypt and decrypt aes roundtrip', () => {
-  const prefix = 'waves'
-  const a = keyPair(s)
-  const b = keyPair(s + s)
-  const sk = sharedKey(a.privateKey, b.publicKey, prefix)
 
-  const message = 'message'
-  const enc = aesEncrypt(message, sk, 'ECB')
-  const decoded = bytesToString(aesDecrypt(enc, sk, 'ECB'))
-  expect(message).toEqual(decoded)
-})
 
 test('aes decrypt backward compatibility check', () => {
   const encrypted = 'U2FsdGVkX19tuxILcDC5gj/GecPmDGEc2l51pCwdBOdtVclJ5rMT4M3Ns9Q+G4rV8wzrVTkhc/nnne5iI9ki/5uEqkGDheAi8xjQTF+MY4Q='

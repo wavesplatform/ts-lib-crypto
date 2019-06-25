@@ -1,9 +1,9 @@
-import { randomBytes } from 'crypto'
+import { randomBytes } from '../src/random'
 import { keyPair } from '../src/address-keys-seed'
 import { sharedKey } from '../src/encryption'
 import { base64Decode, base64Encode } from '../src/conversions/base-xx'
 import { bytesToString } from '../src/conversions/string-bytes'
-import CryptoJS from 'crypto-js'
+import * as CryptoJS from 'crypto-js'
 
 const s = 'secret test seed'
 
