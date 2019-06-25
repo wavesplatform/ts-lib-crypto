@@ -1,4 +1,4 @@
-import { TBytes, TBinaryIn } from '../interface'
+import { TBytes, TBinaryIn } from '../crypto/interface'
 import { _fromIn } from './param'
 
 export const stringToBytes = (str: string): TBytes =>

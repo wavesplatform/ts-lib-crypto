@@ -1,6 +1,7 @@
 export const PUBLIC_KEY_LENGTH = 32
 export const PRIVATE_KEY_LENGTH = 32
 export const SIGNATURE_LENGTH = 64
+export const ADDRESS_LENGTH = 26
 
 export const MAIN_NET_CHAIN_ID = 87 //W
 export const TEST_NET_CHAIN_ID = 84 //T

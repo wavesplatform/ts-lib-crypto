@@ -1,9 +1,9 @@
-import { TBinaryIn, TChainId, MAIN_NET_CHAIN_ID, PUBLIC_KEY_LENGTH } from '.'
-import { ChaidId } from './extensions/chain-id'
-import { _fromIn } from './conversions/param'
+import { TBinaryIn, TChainId, MAIN_NET_CHAIN_ID, PUBLIC_KEY_LENGTH } from './interface'
+import { ChaidId } from '../extensions/chain-id'
+import { _fromIn } from '../conversions/param'
 import { _hashChain } from './hashing'
 import { address } from './address-keys-seed'
-import axlsign from './libs/axlsign'
+import axlsign from '../libs/axlsign'
 
 export const verifyAddress = (addr: TBinaryIn, optional?: { chainId?: TChainId, publicKey?: TBinaryIn }): boolean => {
 

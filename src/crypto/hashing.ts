@@ -1,8 +1,8 @@
-import { TBinaryIn, TBytes } from '.'
-import { _toWords, _fromIn, _fromWords } from './conversions/param'
-import { keccak256 } from './libs/sha3'
+import { TBinaryIn, TBytes } from './interface'
+import { _toWords, _fromIn, _fromWords } from '../conversions/param'
+import { keccak256 } from '../libs/sha3'
 import * as CryptoJS from 'crypto-js'
-import * as blake from './libs/blake2b'
+import * as blake from '../libs/blake2b'
 
 export const _hashChain = (input: TBinaryIn): TBytes =>
   _fromIn(keccak(blake2b(_fromIn(input))))

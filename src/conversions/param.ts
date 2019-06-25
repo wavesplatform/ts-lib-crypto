@@ -1,9 +1,9 @@
-import { TBinaryIn, TBytes, TRawStringIn, TRawStringInDiscriminator } from '../interface'
+import { TBinaryIn, TBytes, TRawStringIn, TRawStringInDiscriminator } from '../crypto/interface'
 import { isString, types } from 'util'
 import * as CryptoJS from 'crypto-js'
 import { base58Decode } from './base-xx'
 import { stringToBytes } from './string-bytes'
-import { Words } from '../util'
+import { Words } from '../crypto/util'
 const { isUint8Array } = types
 
 const isTRawStringInDiscriminator = (_: TRawStringIn): _ is TRawStringInDiscriminator => false

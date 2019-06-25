@@ -34,6 +34,6 @@ export const {
   aesEncrypt,
   split,
   concat,
-} = crypto({ output: 'Base58' })
+} = crypto({ output: 'Bytes' })
 
 

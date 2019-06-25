@@ -1,5 +1,4 @@
-import { crypto, MAIN_NET_CHAIN_ID } from '../src/index'
-
+import { crypto } from '../src/crypto/crypto'
 
 const seed = 'vast local exotic manage click stone boil analyst various truth swift decade cherry cram innocent'
 

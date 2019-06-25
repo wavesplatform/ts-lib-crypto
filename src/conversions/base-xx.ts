@@ -1,5 +1,5 @@
 import * as CryptoJS from 'crypto-js'
-import { TBase64, TBytes, TBinaryIn, TBase58, TBase16 } from '../interface'
+import { TBase64, TBytes, TBinaryIn, TBase58, TBase16 } from '../crypto/interface'
 import base58 from '../libs/base58'
 import { _fromWords, _toWords, _fromIn } from './param'
 

@@ -1,5 +1,5 @@
-import { TBinaryIn, TBytes } from '.'
-import { _fromIn } from './conversions/param'
+import { TBinaryIn, TBytes } from './interface'
+import { _fromIn } from '../conversions/param'
 
 export const concat = (...arrays: TBinaryIn[]): TBytes =>
   arrays.reduce<Uint8Array>((a, b) => Uint8Array.from([...a, ..._fromIn(b)]), new Uint8Array(0))

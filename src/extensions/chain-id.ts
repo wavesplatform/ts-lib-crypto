@@ -1,5 +1,5 @@
-import { TChainId, MAIN_NET_CHAIN_ID } from '..'
-import { TEST_NET_CHAIN_ID } from '../interface'
+import { TChainId, MAIN_NET_CHAIN_ID } from '../crypto/interface'
+import { TEST_NET_CHAIN_ID } from '../crypto/interface'
 
 export const ChaidId = {
   toNumber(chainId: TChainId): number {

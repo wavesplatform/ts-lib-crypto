@@ -1,4 +1,4 @@
-import { TBytes } from '.'
+import { TBytes } from './interface'
 
 import { seedWordsList } from './seed-words-list'
 

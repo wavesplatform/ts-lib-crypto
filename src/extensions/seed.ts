@@ -1,4 +1,4 @@
-import { TSeed, IBinarySeed } from '../interface'
+import { TSeed, IBinarySeed } from '../crypto/interface'
 import { _fromRawIn } from '../conversions/param'
 import { bytesToString } from '../conversions/string-bytes'
 

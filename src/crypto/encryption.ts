@@ -1,12 +1,12 @@
 import { TBinaryIn, TRawStringIn, TBytes, AESMode } from './interface'
 import { randomBytes } from 'crypto'
-import { _fromRawIn, _fromIn, _toWords, _fromWords } from './conversions/param'
+import { _fromRawIn, _fromIn, _toWords, _fromWords } from '../conversions/param'
 import { hmacSHA256, sha256 } from './hashing'
 import { concat, split } from './concat-split'
-import axlsign from './libs/axlsign'
-import { base64Decode, base64Encode } from './conversions/base-xx'
+import axlsign from '../libs/axlsign'
+import { base64Decode, base64Encode } from '../conversions/base-xx'
 import CryptoJS = require('crypto-js')
-import { bytesToString } from './conversions/string-bytes'
+import { bytesToString } from '../conversions/string-bytes'
 
 
 const aesModeMap: Record<AESMode, CryptoJS.Mode> = {
@@ -71,14 +71,14 @@ export const messageDecrypt = (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn
 
   const CEKhmac = _fromIn(hmacSHA256(concat(CEK, iv), _fromIn(sharedKey)))
 
-  const isValidKey = CEKhmac.every((v, i) => v === _CEKhmac[i])
+  const isValidKey = CEKhmac.every((v: number, i: number) => v === _CEKhmac[i])
   if (!isValidKey)
     throw new Error('Invalid key')
 
   const M = aesDecrypt(Cc, CEK, 'CTR', iv)
   const Mhmac = _fromIn(hmacSHA256(M, CEK))
 
-  const isValidMessage = Mhmac.every((v, i) => v === _Mhmac[i])
+  const isValidMessage = Mhmac.every((v: number, i: number) => v === _Mhmac[i])
   if (!isValidMessage)
     throw new Error('Invalid message')
 
