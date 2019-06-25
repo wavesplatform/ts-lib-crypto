@@ -4,40 +4,41 @@
 
 
   This library contains crypto primitives used in Waves protocol. 
-  It could be split into 9 main categories:
- 
- - Seed generation
+  It could be split into 9 main categories.
+  
+  # Agenda 
+ - **[Seed generation](/#seed-generation)**
 	 - randomSeed
 	 - seedWordsList
- - Keys and address
-	 - keyPair
+ - **Keys and address**
 	 - publicKey
-	 - privateKey
+	 - privateKey	
+	 - keyPair
 	 - address
- - Signatures
+ - **Signatures**
 	- signBytes
 	- verifySignature
-- Hashing
+- **Hashing**
 	 - blake2b
 	 - keccak
 	 - sha256
- - Random
+ - **Random**
 	 - randomBytes
- - Base encoding\decoding
+ - **Base encoding\decoding**
 	 -   base64Encode
 	 -   base64Decode
 	 -   base58Encode
 	 -   base58Decode
 	 -   base16Encode
 	 -   base16Decode
- - Messaging
+ - **Messaging**
 	 - sharedKey
 	 - messageDecrypt
 	 - messageEncrypt
- - Encryption
+ - **Encryption**
 	 - aesEncrypt
 	 - aesDecrypt
- - Utils
+ - **Utils**
 	 - split
 	 - concat
 	 - stringToBytes
@@ -154,24 +155,62 @@ import { randomSeed } from  '@waves/waves-crypto'
 
 randomSeed() //uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine
 ```
-You can also specify seed size:
+You can also specify seed-phrase size:
 ```ts
 randomSeed(3) //uncle push human
 ```
 The default seed size is 15 words.
 
 ### seedWordsList
-If you want to get all the valid seed words, use **seedWordsList** - 2048 word array.
+If you want to get all the valid seed words that official waves-client generates seed-phrase from, use **seedWordsList** the 2048 word array.
 ```ts
 import { seedWordsList } from  '@waves/waves-crypto'
 console.log(seedWordsList) // [ 'abandon','ability','able', ... 2045 more items ]
 ```
 # Keys and address
 
-#### publicKey
-You can get public key either from seed or private key:
+### publicKey
+You could get public key either from raw seed-phrase or seed with nonce:
 ```ts
-import { publicKey } from '@waves/waves-crypto'
+import { publicKey, seedWithNonce } from '@waves/waves-crypto'
 const  seed = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
 publicKey(seed) // 4KxUVD9NtyRJjU3BCvPgJSttoJX7cb3DMdDTNucLN121
+publicKey(seedWithNonce(seed, 0)) // 4KxUVD9NtyRJjU3BCvPgJSttoJX7cb3DMdDTNucLN121
 ```
+### privateKey
+Same with private key:
+```ts
+import { privateKey, seedWithNonce } from '@waves/waves-crypto'
+const  seed = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
+privateKey(seed)
+privateKey(seedWithNonce(seed, 99))
+```
+### keyPair
+You could also obtain a keyPair:
+```ts
+import { keyPair } from '@waves/waves-crypto'
+const  seed = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
+keyPair(seed)
+// => { 
+//      publicKey:  '4KxUVD9NtyRJjU3BCvPgJSttoJX7cb3DMdDTNucLN121',
+//      privateKey: '6zFSymZAoaua3gtJPbAUwM584tRETdKYdEG9BeEnZaGW'
+//    }
+```
+### address
+You could create an address for *Mainnet*:
+```ts
+import { address } from '@waves/waves-crypto'
+const  seed = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
+address(seed) // 3P9KR33QyXwfTXv8kKtNGZYtgKk3RXSUk36
+```
+or *Testnet*:
+```ts
+address(seed, 'T') // 3MwJc5iX7QQGq5ciVFdNK7B5KSEGbUCVxDw
+```
+alternatively You could use **TEST_NET_CHAIN_ID** constant:
+```ts
+import { address, TEST_NET_CHAIN_ID } from '@waves/waves-crypto'
+const  seed = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
+address(seed, TEST_NET_CHAIN_ID) // 3MwJc5iX7QQGq5ciVFdNK7B5KSEGbUCVxDw
+```
+There are several more useful constants, you can check them in [\[constants\]](/#constants) section.
