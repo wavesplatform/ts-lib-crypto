@@ -37,15 +37,6 @@ const seed = randomSeed() //figure soap board earth measure stay can nature will
 
 { //For OOP fans
 
-  const obj = crypto({ seed })
-
-  obj.address()
-
-  obj.publicKey()
-
-  obj.privateKey()
-
-  obj.keyPair()
 
 }
 

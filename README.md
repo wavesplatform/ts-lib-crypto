@@ -12,17 +12,17 @@ Small and dependency-free.
 
 ### Keys and Addresses
 
-```js
-const wc = require('waves-crypto')
+```ts
+import { address, keyPair, publicKey, privateKey } = from '@waves/waves-crypto'
 
 //Mainnet address
-wc.address('seed') //3PGMh3vQekpTbvUAiKwdzhWsLaxoSBEcsFJ
+address('seed') //3PGMh3vQekpTbvUAiKwdzhWsLaxoSBEcsFJ
 
 //Testnet address
-wc.address('seed', 'T')//3N4Lt6bWndH4yUAkTFge3F93yhT2c2Pmj9z
+address('seed', 'T')//3N4Lt6bWndH4yUAkTFge3F93yhT2c2Pmj9z
 
 //Public and private keys from seed
-wc.keyPair('seed')
+keyPair('seed')
 
 /*{
   public: 'HzSnoJKTVwezUBmo2gh9HYq52F1maKBsvv1ZWrZAHyHV',
@@ -30,10 +30,10 @@ wc.keyPair('seed')
 }*/
 
 //Public only
-wc.publicKey('seed') //HzSnoJKTVwezUBmo2gh9HYq52F1maKBsvv1ZWrZAHyHV
+publicKey('seed') //HzSnoJKTVwezUBmo2gh9HYq52F1maKBsvv1ZWrZAHyHV
 
 //Private only
-wc.privateKey('seed') //4mmuDf2GQJ6vJrKzVzyKUyGBwv6AfpC5TKpaF3MfEE5w
+privateKey('seed') //4mmuDf2GQJ6vJrKzVzyKUyGBwv6AfpC5TKpaF3MfEE5w
 
 ```
 
