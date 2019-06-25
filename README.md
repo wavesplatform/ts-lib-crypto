@@ -7,7 +7,7 @@
   It could be split into 9 main categories.
   
   # Agenda 
- - **[Seed generation](/#seed-generation)**
+ - **[Seed generation](#seed-generation)**
 	 - randomSeed
 	 - seedWordsList
  - **Keys and address**
