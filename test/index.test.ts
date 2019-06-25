@@ -1,7 +1,7 @@
-import { crypto, MAIN_NET_CHAIN_ID, aesEncrypt, aesDecrypt } from '../src/index'
+import { crypto, MAIN_NET_CHAIN_ID } from '../src/index'
 import * as CryptoJS from 'crypto-js'
 
-const { seed, address, concat, split, sharedKey, messageEncrypt, messageDecrypt, randomBytes, bytesToString, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode } = crypto({ output: 'Base58' })
+const { seed, aesDecrypt, aesEncrypt, address, concat, split, sharedKey, messageEncrypt, messageDecrypt, randomBytes, bytesToString, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode } = crypto({ output: 'Base58' })
 
 const s = '1f98af466da54014bdc08bfbaaaf3c67'
 
@@ -152,19 +152,5 @@ test('aes decrypt backward compatibility check', () => {
   const d = bytesToString(aesDecrypt(base64Decode(encrypted), key))
 
   expect(d).toEqual(decrypted)
-})
-
-test('crypto js', () => {
-  const bytes = randomBytes(32)
-  const prefix = 'waves'
-  const a = keyPair(s)
-  const b = keyPair(s + s)
-  const sk = sharedKey(a.privateKey, b.publicKey, prefix)
-
-  const enc = base64Decode(CryptoJS.AES.encrypt(base64Encode(bytes), bytesToString(sk), { mode: CryptoJS.mode.ECB }).toString())
-  const result = base64Decode(CryptoJS.AES.decrypt(base64Encode(enc), bytesToString(sk), { mode: CryptoJS.mode.ECB }).toString(CryptoJS.enc.Utf8))
-
-  expect(bytes).toEqual(result)
-
 })
 

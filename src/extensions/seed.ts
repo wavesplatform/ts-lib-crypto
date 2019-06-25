@@ -1,6 +1,6 @@
-import { TSeed, IBinarySeed } from './interface'
-import { _fromRawIn } from './conversions/param'
-import { bytesToString } from './conversions/string-bytes'
+import { TSeed, IBinarySeed } from '../interface'
+import { _fromRawIn } from '../conversions/param'
+import { bytesToString } from '../conversions/string-bytes'
 
 export const Seed = {
   isSeedWithNonce: (val: TSeed): val is IBinarySeed =>

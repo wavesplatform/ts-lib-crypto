@@ -1,3 +1,7 @@
+import { TBytes } from '.'
+
+import { seedWordsList } from './seed-words-list'
+
 type TTypesMap = {
   Array8: number[]
   Array16: number[]
@@ -51,3 +55,12 @@ export const secureRandom = <T extends keyof TTypesMap>(count: number, type: T):
       throw new Error(type + ' is unsupported.')
   }
 }
+
+export const randomBytes = (length: number): TBytes =>
+  secureRandom(length, 'Uint8Array')
+
+export const randomSeed = (wordsCount: number = 15): string =>
+  secureRandom(wordsCount, 'Array32')
+    .map(x => seedWordsList[x % seedWordsList.length])
+    .join(' ')
+

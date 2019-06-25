@@ -1,5 +1,5 @@
 import { TSeed, IBinarySeed, TBytes, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, TBinaryIn, TKeyPair } from './interface'
-import { Seed } from './seed-extension'
+import { Seed } from './extensions/seed'
 import { _hashChain, sha256 } from './hashing'
 import { _fromIn } from './conversions/param'
 import { concat } from './concat-split'
@@ -27,7 +27,7 @@ const buildSeedHash = (seedBytes: Uint8Array, nonce?: number): TBytes => {
   }
   const seedBytesWithNonce = concat(nonceArray, seedBytes)
   const seedHash = _hashChain(seedBytesWithNonce)
-  return _fromIn(sha256(seedHash))
+  return sha256(seedHash)
 }
 
 export const keyPair = (seed: TSeed): TKeyPair<TBytes> => {
