@@ -62,7 +62,7 @@ export interface ISeedRelated<TDesiredOut extends TBinaryOut = TBase58> {
   privateKey: (seed: TSeed) => TDesiredOut
   address: (seedOrPublicKey: TSeed | TPublicKey<TBinaryIn>, chainId?: TChainId) => TDesiredOut
 
-  //Bytes hashing and signing
+  //Signature
   signBytes: (seedOrPrivateKey: TSeed | TPrivateKey<TBinaryIn>, bytes: TBinaryIn, random?: TBinaryIn) => TDesiredOut
 }
 

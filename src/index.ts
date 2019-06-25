@@ -1,9 +1,11 @@
 import { crypto } from './crypto/crypto'
+export { seedWordsList } from './crypto/seed-words-list'
 export { ChaidId } from './extensions/chain-id'
 export { Seed } from './extensions/seed'
 export { isPrivateKey, isPublicKey } from './crypto/util'
 export { crypto } from './crypto/crypto'
 export * from './crypto/interface'
+
 export const {
   signBytes,
   keyPair,

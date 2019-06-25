@@ -1,4 +1,5 @@
 import { crypto } from './crypto/crypto'
+export { seedWordsList } from './crypto/seed-words-list'
 export { ChaidId } from './extensions/chain-id'
 export { Seed } from './extensions/seed'
 export { isPrivateKey, isPublicKey } from './crypto/util'
@@ -21,8 +22,6 @@ export const {
   base58Decode,
   base16Encode,
   base16Decode,
-  stringToBytes,
-  bytesToString,
   randomSeed,
   randomBytes,
   verifySignature,
@@ -34,6 +33,8 @@ export const {
   aesEncrypt,
   split,
   concat,
+  stringToBytes,
+  bytesToString,
 } = crypto({ output: 'Bytes' })
 
 
