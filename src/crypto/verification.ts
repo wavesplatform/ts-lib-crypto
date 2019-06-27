@@ -7,12 +7,12 @@ import axlsign from '../libs/axlsign'
 
 export const verifyAddress = (addr: TBinaryIn, optional?: { chainId?: TChainId, publicKey?: TBinaryIn }): boolean => {
 
-  const chainId = ChaidId.toNumber(optional ? (optional.chainId || MAIN_NET_CHAIN_ID) : MAIN_NET_CHAIN_ID)
+  const chainId = optional ? optional.chainId : undefined
 
   try {
     const addressBytes = _fromIn(addr)
 
-    if (addressBytes[0] != 1 || addressBytes[1] != chainId)
+    if (addressBytes[0] != 1 || (chainId ? addressBytes[1] != ChaidId.toNumber(chainId) : false))
       return false
 
     const key = addressBytes.slice(0, 22)
