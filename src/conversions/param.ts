@@ -3,7 +3,6 @@ import { isString, types } from 'util'
 import * as CryptoJS from 'crypto-js'
 import { base58Decode } from './base-xx'
 import { stringToBytes } from './string-bytes'
-import { Words } from '../crypto/util'
 const { isUint8Array } = types
 
 const isTRawStringInDiscriminator = (_: TRawStringIn): _ is TRawStringInDiscriminator => false
@@ -40,7 +39,7 @@ export const _toWords = (arr: Uint8Array) => {
   return (CryptoJS.lib.WordArray.create as any)(words, len)
 }
 
-export const _fromWords = (inValue: Words): TBytes => {
+export const _fromWords = (inValue: any): TBytes => {
   let words = (<any>inValue).words
   let sigBytes = (<any>inValue).sigBytes
 
