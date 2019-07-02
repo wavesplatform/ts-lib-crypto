@@ -1,6 +1,6 @@
 {
   "name": "@waves/waves-crypto",
-  "version": "3.0.15",
+  "version": "3.0.16",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "jest": {
@@ -36,7 +36,6 @@
     "ts-jest": "^23.10.1",
     "ts-loader": "^6.0.2",
     "ts-node": "^8.2.0",
-    "typescript": "^3.5.1",
     "webpack": "^4.32.2",
     "webpack-cli": "^3.3.2"
   }
