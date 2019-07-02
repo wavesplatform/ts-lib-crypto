@@ -21,41 +21,47 @@ type TOptions<T extends TBinaryOut = TDefaultOut, S extends TSeed | undefined = 
 type TWavesCrypto<T extends TBinaryOut = TDefaultOut, S extends TSeed | undefined = undefined> =
   IWavesCrypto<T> & (S extends undefined ? ISeedRelated<T> : ISeedEmbeded<T>)
 
-
 export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | undefined = undefined>(options?: TOptions<TOut, S>): TWavesCrypto<TTypesMap[TOut], S> => {
 
   if (options && options.seed == '')
     throw new Error('Empty seed is not allowed.')
 
-  type T = TTypesMap[TOut]
+  type ArgsFirstRest<TFunc> = TFunc extends (a: infer A, ...args: infer U) => any ? [A, U] : never
+  type ArgsAll<TFunc> = TFunc extends (...args: infer U) => any ? U : never
+  type Return<TFunc> = TFunc extends (...args: any) => infer R ? R : unknown
 
-  const c1 = <T1, R>(f: (a: T1) => R) => (a: T1) => () => f(a)
-  const c2 = <T1, T2, R>(f: (a: T1, b: T2) => R) => (a: T1) => (b: T2) => f(a, b)
-  const c3 = <T1, T2, T3, R>(f: (a: T1, b: T2, c: T3) => R) => (a: T1) => (b: T2, c: T3) => f(a, b, c)
+  const c = <TFunc extends Function>(f: TFunc, first: ArgsFirstRest<TFunc>[0]) =>
+    (...args: ArgsFirstRest<TFunc>[1]) => f(first, ...args) as Return<TFunc>
 
-  const toOut = (f: Function) => (...args: any[]): T => {
+  const toOut = <F extends Function>(f: F) => (...args: ArgsAll<F>): TTypesMap[TOut] => {
     const r = f(...args)
     return (!options || options && options.output === 'Base58') ? base58Encode(r) : r
   }
 
-  const toOutKey = (f: Function) => (...args: any[]): TKeyPair => {
+  const toOutKey = <F extends Function>(f: F) => (...args: ArgsAll<F>): TKeyPair<TTypesMap[TOut]> => {
     const r = f(...args) as TKeyPair
-    return (!options || options && options.output === 'Base58') ? ({ privateKey: base58Encode(r.privateKey), publicKey: base58Encode(r.publicKey) }) : r
+    return ((!options || options && options.output === 'Base58') ?
+      ({ privateKey: base58Encode(r.privateKey), publicKey: base58Encode(r.publicKey) }) :
+      r) as TKeyPair<TTypesMap[TOut]>
   }
 
   const s = (options && options.seed) ? options.seed as TSeed : undefined
 
-  return <unknown>{
-    signBytes: toOut(s ? c3(signBytes)(s) : signBytes),
-    keyPair: toOutKey(s ? c1(keyPair) : keyPair),
-    publicKey: toOut(s ? c1(publicKey)(s) : publicKey),
-    privateKey: toOut(s ? c1(privateKey)(s) : privateKey),
-    address: toOut(s ? c2(address)(s) : address),
-    blake2b: toOut(blake2b),
-    keccak: toOut(keccak),
-    sha256: toOut(sha256),
+  const seedPart = {
+    seedWithNonce: s ? c(seedWithNonce, s) : seedWithNonce,
+    signBytes: toOut(s ? c(signBytes, s) : signBytes),
+    keyPair: toOutKey(s ? c(keyPair, s) : keyPair),
+    publicKey: toOut(s ? c(publicKey, s) : publicKey),
+    privateKey: toOut(s ? c(privateKey, s) : privateKey),
+    address: toOut(s ? c(address, s) : address),
+  } as S extends undefined ? ISeedRelated<TTypesMap[TOut]> : ISeedEmbeded<TTypesMap[TOut]>
+
+  return {
+    ...seedPart,
     sharedKey: toOut(sharedKey),
-    seedWithNonce: s ? c2(seedWithNonce)(s) : seedWithNonce,
+    blake2b,
+    keccak,
+    sha256,
     base64Encode,
     base64Decode,
     base58Encode,
@@ -75,7 +81,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     aesEncrypt,
     split,
     concat,
-  } as TWavesCrypto<T, S>
+  }
 }
 
 

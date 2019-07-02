@@ -81,9 +81,9 @@ export interface ISeedEmbeded<TDesiredOut extends TBinaryOut = TBase58> {
 export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
 
   //Hashing 
-  blake2b: (input: TBinaryIn) => TDesiredOut
-  keccak: (input: TBinaryIn) => TDesiredOut
-  sha256: (input: TBinaryIn) => TDesiredOut
+  blake2b: (input: TBinaryIn) => TBytes
+  keccak: (input: TBinaryIn) => TBytes
+  sha256: (input: TBinaryIn) => TBytes
 
   //Base encoding\decoding
   base64Encode: (input: TBinaryIn) => TBase64
@@ -97,7 +97,7 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
   stringToBytes: (input: string) => TBytes
   bytesToString: (input: TBinaryIn) => string
   split: (binary: TBinaryIn, ...sizes: number[]) => TBytes[]
-  concat: (...binaries: TBinaryIn[]) => TDesiredOut
+  concat: (...binaries: TBinaryIn[]) => TBytes
 
   //Random
   randomBytes: (size: number) => TBytes
@@ -111,7 +111,7 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
   //Messaging
   sharedKey: (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TRawStringIn) => TDesiredOut
   messageDecrypt: (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn) => string
-  messageEncrypt: (sharedKey: TBinaryIn, message: TRawStringIn) => TDesiredOut
+  messageEncrypt: (sharedKey: TBinaryIn, message: TRawStringIn) => TBytes
 
   //Encryption
   aesEncrypt: (data: TRawStringIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
