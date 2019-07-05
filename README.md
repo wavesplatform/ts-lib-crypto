@@ -11,28 +11,26 @@ The waves protocol is a set of rules named consensus by which nodes reach an agr
 - **[Outputs](#outputs)**
  - **[Seed generation](#seed-generation)**
 	 - [randomSeed](#randomseed)
-	 - seedWordsList
- - **Keys and address**
-	 - publicKey
-	 - privateKey	
-	 - keyPair
-	 - address
- - **Signatures**
-	 - signBytes
-	 - verifySignature
-- **Hashing**
-	 - blake2b
-	 - keccak
-	 - sha256
- - **Random**
-	 - randomBytes
- - **Base encoding\decoding**
-	 - base64Encode
-	 - base64Decode
-	 - base58Encode
-	 - base58Decode
-	 - base16Encode
-	 - base16Decode
+	 - [seedWordsList](#seedwordslist)
+ - **[Keys and address](#keys-and-address)**
+	 - [publicKey](#publickey)
+	 - [privateKey](#privatekey)
+	 - [keyPair](#keypair)
+	 - [address](#address)
+ - **[Signatures](#signatures)**
+	 - [signBytes](#signbytes)
+	 - [verifySignature](#verifySignature)
+- **[Hashing](#hashing)**
+	 - [blake2b](#blake2b)
+	 - [keccak](#keccak)
+	 - [sha256](#sha256)
+ - **[Random](#random)**
+	 - [randomBytes](#randomBytes)
+	 - [random](#random)
+ - **[Base encoding\decoding](#base-encodingdecoding)**
+	 - [base16](#base-encodingdecoding)
+	 - [base58](#base-encodingdecoding)
+	 - [base64](#base-encodingdecoding)
  - **Messaging**
 	 - sharedKey
 	 - messageDecrypt
