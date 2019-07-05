@@ -22,6 +22,7 @@ export const {
   base58Decode,
   base16Encode,
   base16Decode,
+  random,
   randomSeed,
   randomBytes,
   verifySignature,

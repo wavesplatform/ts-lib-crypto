@@ -25,6 +25,7 @@ export const {
   base16Decode,
   stringToBytes,
   bytesToString,
+  random,
   randomSeed,
   randomBytes,
   verifySignature,

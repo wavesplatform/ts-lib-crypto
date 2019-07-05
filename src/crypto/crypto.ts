@@ -1,5 +1,5 @@
 import { IWavesCrypto, TBinaryOut, TSeed, ISeedRelated, ISeedEmbeded, TKeyPair } from './interface'
-import { randomBytes, randomSeed } from './random'
+import { randomBytes, randomSeed, random } from './random'
 import { aesEncrypt, aesDecrypt, messageDecrypt, messageEncrypt, sharedKey } from './encryption'
 import { base58Encode, base64Decode, base64Encode, base16Decode, base16Encode, base58Decode } from '../conversions/base-xx'
 import { _fromIn, _toWords, _fromRawIn, _fromWords } from '../conversions/param'
@@ -10,18 +10,18 @@ import { privateKey, address, publicKey, keyPair, seedWithNonce } from './addres
 import { signBytes } from './sign'
 import { verifyAddress, verifyPublicKey, verifySignature } from './verification'
 
-type TTypesMap = {
+type TOutputTypesMap = {
   Bytes: Uint8Array
   Base58: string
 }
 
 type TDefaultOut = 'Base58'
-type TOutput = keyof TTypesMap
+type TOutput = keyof TOutputTypesMap
 type TOptions<T extends TBinaryOut = TDefaultOut, S extends TSeed | undefined = undefined> = { output?: T, seed?: S }
 type TWavesCrypto<T extends TBinaryOut = TDefaultOut, S extends TSeed | undefined = undefined> =
   IWavesCrypto<T> & (S extends undefined ? ISeedRelated<T> : ISeedEmbeded<T>)
 
-export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | undefined = undefined>(options?: TOptions<TOut, S>): TWavesCrypto<TTypesMap[TOut], S> => {
+export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | undefined = undefined>(options?: TOptions<TOut, S>): TWavesCrypto<TOutputTypesMap[TOut], S> => {
 
   if (options && options.seed == '')
     throw new Error('Empty seed is not allowed.')
@@ -33,16 +33,16 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
   const c = <TFunc extends Function>(f: TFunc, first: ArgsFirstRest<TFunc>[0]) =>
     (...args: ArgsFirstRest<TFunc>[1]) => f(first, ...args) as Return<TFunc>
 
-  const toOut = <F extends Function>(f: F) => (...args: ArgsAll<F>): TTypesMap[TOut] => {
+  const toOut = <F extends Function>(f: F) => (...args: ArgsAll<F>): TOutputTypesMap[TOut] => {
     const r = f(...args)
     return (!options || options && options.output === 'Base58') ? base58Encode(r) : r
   }
 
-  const toOutKey = <F extends Function>(f: F) => (...args: ArgsAll<F>): TKeyPair<TTypesMap[TOut]> => {
+  const toOutKey = <F extends Function>(f: F) => (...args: ArgsAll<F>): TKeyPair<TOutputTypesMap[TOut]> => {
     const r = f(...args) as TKeyPair
     return ((!options || options && options.output === 'Base58') ?
       ({ privateKey: base58Encode(r.privateKey), publicKey: base58Encode(r.publicKey) }) :
-      r) as TKeyPair<TTypesMap[TOut]>
+      r) as TKeyPair<TOutputTypesMap[TOut]>
   }
 
   const s = (options && options.seed) ? options.seed as TSeed : undefined
@@ -54,7 +54,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     publicKey: toOut(s ? c(publicKey, s) : publicKey),
     privateKey: toOut(s ? c(privateKey, s) : privateKey),
     address: toOut(s ? c(address, s) : address),
-  } as S extends undefined ? ISeedRelated<TTypesMap[TOut]> : ISeedEmbeded<TTypesMap[TOut]>
+  } as S extends undefined ? ISeedRelated<TOutputTypesMap[TOut]> : ISeedEmbeded<TOutputTypesMap[TOut]>
 
   return {
     ...seedPart,
@@ -70,6 +70,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     base16Decode,
     stringToBytes,
     bytesToString,
+    random,
     randomSeed,
     randomBytes,
     verifySignature,

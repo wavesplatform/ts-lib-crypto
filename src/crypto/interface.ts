@@ -13,6 +13,16 @@ export interface INonceSeed {
 
 export type AESMode = 'CBC' | 'CFB' | 'CTR' | 'OFB' | 'ECB'
 
+export type TRandomTypesMap = {
+  Array8: number[]
+  Array16: number[]
+  Array32: number[]
+  Buffer: Buffer
+  Uint8Array: Uint8Array
+  Uint16Array: Uint16Array
+  Uint32Array: Uint32Array
+}
+
 /* Type aliases used to increase flexibility and be able
    to extend these types later on. Also type aliases allows
    names to be more self explanatory like in BASE58 case. */
@@ -49,7 +59,6 @@ export type TSeed = TRawStringIn | INonceSeed
 /* Consider that every method should handle TSeed
    seamlessly so in case of absence of type union operator
    overloads should be implemented for each possible TSeed type */
-
 
 /* Waves Crypto is a collection of essential cryptography and hashing
    algorithms used by Waves, protocol entities and binary structures. */
@@ -100,6 +109,7 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
   concat: (...binaries: TBinaryIn[]) => TBytes
 
   //Random
+  random<T extends keyof TRandomTypesMap>(count: number, type: T): TRandomTypesMap[T]
   randomBytes: (size: number) => TBytes
   randomSeed: (wordsCount?: number) => string
 
@@ -117,5 +127,3 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
   aesEncrypt: (data: TRawStringIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
   aesDecrypt: (encryptedData: TBinaryIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
 }
-
-
