@@ -25,18 +25,19 @@ async function build() {
     //await run('ts-node usage/index.ts', p('tmp'))
     //await run('typedoc', p('tmp'))
     //await copy(p('package.json'), p('tmp/dist/package.json'))
-    //await copy(p('../README.md'), p('tmp/dist/README.md'))
+    
     //await copy(p('tmp/docs'), p('../docs'))
     await copy(p('tmp/dist'), p('../dist'))
     await run(p('cp src/libs/*.d.ts dist/libs;cp src/libs/*.js dist/libs'))
     await remove(p('tmp'))
 
-    //const ver = await npmGetVersion('@waves/ts-lib-crypto')
-    //ver.patch++
+    const ver = await npmGetVersion('@waves/ts-lib-crypto')
+    ver.patch++
+    await copy(p('../README.md'), p('../dist/README.md'))
     await copyJson(p('../package.json'), p('../dist/package.json'), {
       main: 'index.js',
       types: 'index.d.ts',
-      version: versionToString({ major: 0, minor: 0, patch: 1 }),
+      version: versionToString(ver),
       jest: undefined,
       scripts: undefined,
       devDependencies: undefined,
