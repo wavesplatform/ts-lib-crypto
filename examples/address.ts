@@ -1,4 +1,4 @@
-import { address, TEST_NET_CHAIN_ID } from '@waves/waves-crypto'
+import { address, TEST_NET_CHAIN_ID } from '@waves/ts-lib-crypto'
 
 const seed = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
 address(seed) // 3P9KR33QyXwfTXv8kKtNGZYtgKk3RXSUk36

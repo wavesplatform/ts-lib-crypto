@@ -31,12 +31,14 @@ async function build() {
     await run(p('cp src/libs/*.d.ts dist/libs;cp src/libs/*.js dist/libs'))
     await remove(p('tmp'))
 
-    const ver = await npmGetVersion('@waves/waves-crypto')
-    ver.patch++
+    //const ver = await npmGetVersion('@waves/ts-lib-crypto')
+    //ver.patch++
     await copyJson(p('../package.json'), p('../dist/package.json'), {
       main: 'index.js',
       types: 'index.d.ts',
-      version: versionToString(ver),
+      version: versionToString({ major: 0, minor: 0, patch: 1 }),
+      jest: undefined,
+      scripts: undefined,
       devDependencies: undefined,
     })
   } catch (error) {

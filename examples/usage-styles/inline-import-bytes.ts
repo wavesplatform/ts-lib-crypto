@@ -11,7 +11,7 @@
 // sha256
 // sharedKey
 
-import { address } from '@waves/waves-crypto/bytes'
+import { address } from '@waves/ts-lib-crypto/bytes'
 
 const seed = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
 

@@ -1,5 +1,5 @@
 
-import { keyPair } from '@waves/waves-crypto'
+import { keyPair } from '@waves/ts-lib-crypto'
 
 const seed = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
 

@@ -1,4 +1,4 @@
-import { address, publicKey, privateKey, keyPair } from '@waves/waves-crypto'
+import { address, publicKey, privateKey, keyPair } from '@waves/ts-lib-crypto'
 
 const seed = 'secret seed'
 

@@ -1,4 +1,4 @@
-import { base16Encode, base16Decode, base58Encode, base58Decode, base64Encode, base64Decode, randomBytes } from '@waves/waves-crypto'
+import { base16Encode, base16Decode, base58Encode, base58Decode, base64Encode, base64Decode, randomBytes } from '@waves/ts-lib-crypto'
 
 const bytes = randomBytes(32)
 

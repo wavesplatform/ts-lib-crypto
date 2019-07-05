@@ -1,4 +1,4 @@
-import { crypto } from '@waves/waves-crypto'
+import { crypto } from '@waves/ts-lib-crypto'
 
 const { randomSeed } = crypto()
 const seed = randomSeed() //figure soap board earth measure stay can nature will figure clown cross save mention liberty

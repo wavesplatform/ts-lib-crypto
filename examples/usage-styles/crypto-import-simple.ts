@@ -1,4 +1,4 @@
-import { crypto } from '@waves/waves-crypto'
+import { crypto } from '@waves/ts-lib-crypto'
 
 const { randomSeed, address, publicKey, privateKey, keyPair } = crypto()
 

@@ -1,4 +1,4 @@
-import { randomBytes, random } from '@waves/waves-crypto'
+import { randomBytes, random } from '@waves/ts-lib-crypto'
 
 const length = 3
 console.log(randomBytes(length))             // Uint8Array [ 120, 46, 179 ]          

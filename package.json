@@ -1,6 +1,15 @@
 {
-  "name": "@waves/waves-crypto",
-  "version": "3.0.17",
+  "name": "@waves/ts-lib-crypto",
+  "version": "0.0.1",
+  "description": "This library contains all algorithm implementations like signature verification and protocol entries like address used in Waves.",
+  "keywords": [
+    "waves",
+    "crypto",
+    "protocol",
+    "binary",
+    "cryptography",
+    "signature"
+  ],
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "jest": {
