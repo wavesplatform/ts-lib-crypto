@@ -2,7 +2,7 @@
 
 The waves protocol is a set of rules named consensus by which nodes reach an agreement on the network, and format which nodes use to communicate with each other. It based on several well described hash and crypto algorithms and has predefined set of entries to operate on network. This library contains all algorithm implementations like signature verification and protocol entries like address used in waves protocol. Also it contains utility methods and format converters to help 3rd party developers.
 
-# Agenda
+## Agenda
 - **[Installation](#installation)**
 - **[Import styles](#import-styles)**
 - **[Inputs](#inputs)**
@@ -44,11 +44,11 @@ The waves protocol is a set of rules named consensus by which nodes reach an agr
 - **[Constants](#constants)**
 - **[Interface](#interface)**
 - **[More examples](#more-examples)**
-# Installation
+## Installation
 ```
 npm install @waves/ts-lib-crypto
 ```
-# Import styles
+## Import styles
 The is several ways of doing things when using **ts-lib-crypto**.
 You can import functions strait-forward:
 ```ts
@@ -68,7 +68,7 @@ const { address } = crypto({seed: 'my secret seed'})
 address() // 3PAP3wkgbGjdd1FuBLn9ajXvo6edBMCa115
 ```
 
-# Inputs 
+## Inputs 
 **ts-lib-crypto** is even more flexible. Any function argument that represents binary data or seed could be passed in several ways. Let's take a look on the following example:
 ```ts
 import { address } from  '@waves/ts-lib-crypto'
@@ -90,7 +90,7 @@ sha256(addressBase58) // DMPenguwWdLdZ7tesiZY6grw7mjKU2Dob1cn9Uq9TKfp
 Here we got **sha256** hash from address bytes represented as **base58** *(3P9KR33QyXwfTXv8kKtNGZYtgKk3RXSUk36)*. 
 Be aware that **sha256** value is not based on "*3P9KR33QyXwfTXv8kKtNGZYtgKk3RXSUk36*" string itself, this value was treated as a **binary data** and **base58Decode** was applied.
 
-# Outputs
+## Outputs
 As you've noticed from the previous section *address()* output is **base58** string like:
 ```ts
 // 3PAP3wkgbGjdd1FuBLn9ajXvo6edBMCa115
@@ -123,7 +123,7 @@ address('uncle push human bus echo drastic garden joke sand warfare sentence fos
 // => Uint8Array [1,87,55,118,79,89,6,115,207,200,130,220,32,33,101,69,108,108,53,48,167,127,203,18,143,121]
 ```
 
-# Seed generation
+## Seed generation
 
 The seed is a set of words or bytes that private and public keys are generated from. The usual Waves seed looks like:
 ```
@@ -167,7 +167,7 @@ If you want to get all the valid seed words that official waves-client generates
 import { seedWordsList } from '@waves/ts-lib-crypto'
 console.log(seedWordsList) // [ 'abandon','ability','able', ... 2045 more items ]
 ```
-# Keys and address
+## Keys and address
 
 ### publicKey
 You could get public key either from raw seed-phrase or seed with nonce:
@@ -214,7 +214,7 @@ const  seed = 'uncle push human bus echo drastic garden joke sand warfare senten
 address(seed, TEST_NET_CHAIN_ID) // 3MwJc5iX7QQGq5ciVFdNK7B5KSEGbUCVxDw
 ```
 There are several more useful constants, you can check them in [\[constants\]](/#constants) section.
-# Signatures
+## Signatures
 #### signBytes
 To sign arbitrary bytes or usually transaction bytes you should use the **signBytes** function.
 Here is sign with seed example:
@@ -248,7 +248,7 @@ const keys = keyPair(seed)
 const signature = signBytes(keys, bytes)
 verifySignature(keys.publicKey, bytes, signature) // true
 ```
-# Hashing
+## Hashing
 There are three hashing algorithms available in **ts-lib-crypto**.
 #### blake2b
 ```ts
@@ -281,7 +281,7 @@ sha256(bytesArray)  // 4JPydqbhxhZF7kpuGA2tJWkXDmevJYfig45gqdV1UF9E
 sha256(bytesUint)   // 4JPydqbhxhZF7kpuGA2tJWkXDmevJYfig45gqdV1UF9E
 sha256(bytesBase58) // 4JPydqbhxhZF7kpuGA2tJWkXDmevJYfig45gqdV1UF9E
 ```
-# Random
+## Random
 There is several ways to get random values in **ts-lib-crypto**.
 To get an **Uint8Array** of random values simply use:
 #### randomBytes
@@ -303,7 +303,7 @@ random(length, 'Uint8Array')   // Uint8Array [ 137, 85, 212 ]
 random(length, 'Uint16Array')  // Uint16Array [ 35881, 51653, 55967 ]  
 random(length, 'Uint32Array')  // Uint32Array [ 698646076, 2957331816, 2073997581 ]    
 ```
-# Base encoding\decoding
+## Base encoding\decoding
 
 
 ```ts
@@ -323,14 +323,14 @@ const bytesFromBase58 = base58Decode(base58String)
 const base64String = base64Encode(bytes) // IFnsXZ7WQLdXIuxqL/dokOUj6kYkiHVJ23YdZ4uo+Jk=
 const bytesFromBase64 = base64Decode(base64String)
 ```
-# Messaging
+## Messaging
 	 - sharedKey
 	 - messageDecrypt
 	 - messageEncrypt
-# Encryption
+## Encryption
 	 - aesEncrypt
 	 - aesDecrypt
-# Utils
+## Utils
 Utility functions designed to help 3rd party developers working with js binary types like Uint8Array and Buffer.
 #### split
 You can use split for splitting bytes to sub arrays.
@@ -371,7 +371,7 @@ stringToBytes('Waves!') // Uint8Array [ 87, 97, 118, 101, 115, 33 ]
 import { bytesToString } from '@waves/ts-lib-crypto'
 bytesToString([ 87, 97, 118, 101, 115, 33 ]) // Waves!
 ```
-# Constants
+## Constants
 There is several useful constants declared at **ts-lib-crypto**:
 ```ts
 const PUBLIC_KEY_LENGTH = 32
@@ -382,7 +382,7 @@ const ADDRESS_LENGTH = 26
 const MAIN_NET_CHAIN_ID = 87 // W
 const TEST_NET_CHAIN_ID = 84 // T
 ```
-# Interface 
+## Interface 
 The full **IWavesCrypto** interface can be found on the [project`s github](https://github.com/wavesplatform/ts-lib-crypto) in [interface.ts](https://github.com/wavesplatform/ts-lib-crypto/blob/master/src/crypto/interface.ts).
 ```ts
   //Seeds, keys and addresses
@@ -432,7 +432,7 @@ The full **IWavesCrypto** interface can be found on the [project`s github](https
   aesEncrypt: (data: TRawStringIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
   aesDecrypt: (encryptedData: TBinaryIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
 ```
-# More examples
+## More examples
 Every example used in this document and many more can be found on the [project`s github](https://github.com/wavesplatform/ts-lib-crypto) inside [examples](https://github.com/wavesplatform/ts-lib-crypto/tree/master/examples) folder.
 
 
