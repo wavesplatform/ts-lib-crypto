@@ -23,6 +23,7 @@
         "esSpecCompliant": true
       }
     ],
+    "indent": [true, "spaces", 2],
     "quotemark": [
       true,
       "single",
