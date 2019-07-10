@@ -2,7 +2,6 @@ import { IWavesCrypto, TBinaryOut, TSeed, ISeedRelated, ISeedEmbeded, TKeyPair }
 import { randomBytes, randomSeed, random } from './random'
 import { aesEncrypt, aesDecrypt, messageDecrypt, messageEncrypt, sharedKey } from './encryption'
 import { base58Encode, base64Decode, base64Encode, base16Decode, base16Encode, base58Decode } from '../conversions/base-xx'
-import { _fromIn, _toWords, _fromRawIn, _fromWords } from '../conversions/param'
 import { bytesToString, stringToBytes } from '../conversions/string-bytes'
 import { concat, split } from './concat-split'
 import { _hashChain, sha256, keccak, blake2b } from './hashing'
