@@ -3,7 +3,7 @@ import axlsign from '../libs/axlsign'
 import { _fromIn } from '../conversions/param'
 import { isPrivateKey } from './util'
 import { privateKey } from './address-keys-seed'
-import { randomBytes } from 'crypto'
+import { randomBytes } from './random'
 
 export const signBytes = (seedOrPrivateKey: TSeed | TPrivateKey<TBinaryIn>, bytes: TBinaryIn, random?: TBinaryIn): TBytes =>
   axlsign.sign(_fromIn(isPrivateKey(seedOrPrivateKey)

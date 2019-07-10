@@ -1,5 +1,5 @@
 import { TBinaryIn, TRawStringIn, TBytes, AESMode } from './interface'
-import { randomBytes } from 'crypto'
+import { randomBytes } from './random'
 import { _fromRawIn, _fromIn, _toWords, _fromWords } from '../conversions/param'
 import { hmacSHA256, sha256 } from './hashing'
 import { concat, split } from './concat-split'
