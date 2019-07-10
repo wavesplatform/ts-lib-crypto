@@ -89,7 +89,7 @@ export interface ISeedEmbeded<TDesiredOut extends TBinaryOut = TBase58> {
 
 export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
 
-  //Hashing 
+  //Hashing
   blake2b: (input: TBinaryIn) => TBytes
   keccak: (input: TBinaryIn) => TBytes
   sha256: (input: TBinaryIn) => TBytes
