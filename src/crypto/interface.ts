@@ -13,6 +13,8 @@ export interface INonceSeed {
 
 export type AESMode = 'CBC' | 'CFB' | 'CTR' | 'OFB' | 'ECB'
 
+export type RSADigestAlgorithm = 'MD5' |'SHA1' |'SHA224' |'SHA256' |'SHA384' |'SHA512' |'SHA3-224' |'SHA3-256' |'SHA3-384' |'SHA3-512'
+
 export type TRandomTypesMap = {
   Array8: number[]
   Array16: number[]
@@ -55,6 +57,12 @@ export type TKeyPair<T extends TBinaryIn = TBase58> = TPublicKey<T> & TPrivateKe
 
 //TSeed is a union of types that could represent a Waves seed.
 export type TSeed = TRawStringIn | INonceSeed
+
+//TRSAKeyPair is X509Encoded RSA key pair
+export type TRSAKeyPair = {
+  rsaPublic: TBytes
+  rsaPrivate: TBytes
+}
 
 /* Consider that every method should handle TSeed
    seamlessly so in case of absence of type union operator
@@ -126,4 +134,9 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
   //Encryption
   aesEncrypt: (data: TRawStringIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
   aesDecrypt: (encryptedData: TBinaryIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
+
+  //RSA
+  rsaKeyPair: (bits?: number) => TRSAKeyPair
+  rsaSign: (rsaPrivateKey: TBytes, message: TBytes, digest?: RSADigestAlgorithm) => TBytes
+  rsaVerify: (rsaPublicKey: TBytes, message: TBytes, signature: TBytes, digest?: RSADigestAlgorithm) => boolean
 }
