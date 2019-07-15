@@ -2,11 +2,10 @@ import { pki, md } from 'node-forge'
 import { RSADigestAlgorithm, TBytes, TRSAKeyPair } from './interface'
 import { base64Decode, base64Encode } from '../conversions/base-xx'
 import { bytesToString } from '../conversions/string-bytes'
-import * as fs from 'fs'
 
 export const pemToBytes = (pem: string) => base64Decode(
   pem.trim()
-    .split(/\n|\n\r/)
+    .split(/\r\n|\n/)
     .slice(1, -1).join('')
     .trim()
 )
@@ -35,8 +34,6 @@ export const bytesToPem = (bytes: Uint8Array, type: keyof typeof pemTypeMap) => 
 
 export const rsaKeyPair = (bits = 512): TRSAKeyPair => {
   const kp = pki.rsa.generateKeyPair(bits)
-  fs.writeFileSync('private.pem', pki.privateKeyToPem(kp.privateKey))
-  fs.writeFileSync('public.pem', pki.publicKeyToPem(kp.publicKey))
 
   return {
     rsaPrivate: pemToBytes(pki.privateKeyToPem(kp.privateKey)),

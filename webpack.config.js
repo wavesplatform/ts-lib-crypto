@@ -16,10 +16,10 @@ module.exports = {
   },
   output: {
     //filename: 'bundle.js',
-    //path: path.resolve(__dirname, 'dist')
-    library: 'wavesCrypro',
-    libraryTarget: 'commonjs',
-    filename: 'wavesCrypro.js'
+    path: path.resolve(__dirname, 'dist/min'),
+    library: 'WavesCrypto',
+    libraryTarget: 'umd',
+    filename: 'waves-lib-crypto.js'
   }
 };
 
