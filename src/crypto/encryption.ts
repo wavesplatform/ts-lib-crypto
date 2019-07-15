@@ -1,40 +1,52 @@
+import * as forge from 'node-forge'
 import { TBinaryIn, TRawStringIn, TBytes, AESMode } from './interface'
 import { randomBytes } from './random'
-import { _fromRawIn, _fromIn, _toWords, _fromWords } from '../conversions/param'
+import { _fromRawIn, _fromIn } from '../conversions/param'
 import { hmacSHA256, sha256 } from './hashing'
 import { concat, split } from './concat-split'
 import axlsign from '../libs/axlsign'
-import { base64Decode, base64Encode } from '../conversions/base-xx'
-import CryptoJS = require('crypto-js')
-import { bytesToString } from '../conversions/string-bytes'
+import { binaryStringToBytes, bytesToBinaryString, bytesToString, stringToBytes } from '../conversions/string-bytes'
+import { base64Encode } from '../conversions/base-xx'
 
-
-const aesModeMap: Record<AESMode, CryptoJS.Mode> = {
-  'CBC': CryptoJS.mode.CBC,
-  'CFB': CryptoJS.mode.CFB,
-  'CTR': CryptoJS.mode.CTR,
-  'OFB': CryptoJS.mode.OFB,
-  'ECB': CryptoJS.mode.ECB,
+export const aesEncrypt = (data: TRawStringIn, secret: TRawStringIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes => {
+  const cipher = forge.cipher.createCipher(`AES-${mode}` as any, bytesToBinaryString(_fromRawIn(secret)))
+  cipher.start({iv: iv && bytesToBinaryString(_fromIn(iv))})
+  cipher.update(forge.util.createBuffer(_fromRawIn(data)))
+  return binaryStringToBytes(cipher.output.getBytes())
 }
 
-export const aesEncrypt = (data: TRawStringIn, secret: TRawStringIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes =>
-  base64Decode(
-    CryptoJS.AES.encrypt(_toWords(_fromRawIn(data)), bytesToString(_fromRawIn(secret)),
-      {
-        iv: iv ? _toWords(_fromIn(iv)) : undefined,
-        mode: aesModeMap[mode],
-      })
-      .toString()
-  )
+// const aesModeMap: Record<AESMode, CryptoJS.Mode> = {
+//   'CBC': CryptoJS.mode.CBC,
+//   'CFB': CryptoJS.mode.CFB,
+//   'CTR': CryptoJS.mode.CTR,
+//   'OFB': CryptoJS.mode.OFB,
+//   'ECB': CryptoJS.mode.ECB,
+// }
 
-export const aesDecrypt = (encryptedData: TBinaryIn, secret: TRawStringIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes =>
-  _fromWords(
-    CryptoJS.AES.decrypt(base64Encode(encryptedData), bytesToString(_fromRawIn(secret)),
-      {
-        iv: iv ? _toWords(_fromIn(iv)) : undefined,
-        mode: aesModeMap[mode],
-      })
-  )
+// base64Decode(
+//   CryptoJS.AES.encrypt(_toWords(_fromRawIn(data)), bytesToString(_fromRawIn(secret)),
+//     {
+//       iv: iv ? _toWords(_fromIn(iv)) : undefined,
+//       mode: aesModeMap[mode],
+//     })
+//     .toString()
+// )
+
+export const aesDecrypt = (encryptedData: TBinaryIn, secret: TRawStringIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes => {
+  const binsecret =  bytesToString(_fromRawIn(secret))
+  const decipher = forge.cipher.createDecipher(`AES-${mode}` as any, binsecret)
+  decipher.start({iv: iv && bytesToBinaryString(_fromIn(iv))})
+  decipher.update(forge.util.createBuffer(_fromIn(encryptedData)))
+  return binaryStringToBytes(decipher.output.getBytes())
+}
+// export const aesDecrypt = (encryptedData: TBinaryIn, secret: TRawStringIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes =>
+//   _fromWords(
+//     CryptoJS.AES.decrypt(base64Encode(encryptedData), bytesToString(_fromRawIn(secret)),
+//       {
+//         iv: iv ? _toWords(_fromIn(iv)) : undefined,
+//         mode: aesModeMap[mode],
+//       })
+//   )
 
 export const messageEncrypt = (sharedKey: TBinaryIn, message: TRawStringIn): TBytes => {
   const CEK = randomBytes(32)

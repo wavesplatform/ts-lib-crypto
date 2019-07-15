@@ -42,7 +42,7 @@ export type TBinaryIn = TBytes | TBase58 | number[]
 
 export type TRawStringInDiscriminator = { TRawStringIn: null }
 
-//Every input stinrg could be represented as Uint8Array or number[] or a string itself
+//Every input string could be represented as Uint8Array or number[] or a string itself
 export type TRawStringIn = TBytes | string | number[] | TRawStringInDiscriminator
 
 export type TBinaryOut = TBytes | TBase58

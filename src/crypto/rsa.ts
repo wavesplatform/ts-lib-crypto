@@ -1,7 +1,7 @@
 import { pki, md } from 'node-forge'
 import { RSADigestAlgorithm, TBytes, TRSAKeyPair } from './interface'
 import { base64Decode, base64Encode } from '../conversions/base-xx'
-import { bytesToString } from '../conversions/string-bytes'
+import { binaryStringToBytes, bytesToBinaryString } from '../conversions/string-bytes'
 
 export const pemToBytes = (pem: string) => base64Decode(
   pem.trim()
@@ -34,7 +34,6 @@ export const bytesToPem = (bytes: Uint8Array, type: keyof typeof pemTypeMap) => 
 
 export const rsaKeyPair = (bits = 512): TRSAKeyPair => {
   const kp = pki.rsa.generateKeyPair(bits)
-
   return {
     rsaPrivate: pemToBytes(pki.privateKeyToPem(kp.privateKey)),
     rsaPublic: pemToBytes(pki.publicKeyToPem(kp.publicKey)),
@@ -61,13 +60,13 @@ export const rsaSign = (rsaPrivateKey: TBytes, message: TBytes, digest: RSADiges
   const s = bytesToPem(rsaPrivateKey, 'rsaPrivateNonEncrypted')
   const sk = pki.privateKeyFromPem(s) as pki.rsa.PrivateKey
   const _digest = digestMap[digest].create()
-  _digest.update(bytesToString(message), 'utf8')
-  return Uint8Array.from(sk.sign(_digest ).split('').map(c => c.charCodeAt(0)))
+  _digest.update(bytesToBinaryString(message))
+  return binaryStringToBytes(sk.sign(_digest ))
 }
 
 export const rsaVerify = (rsaPublicKey: TBytes, message: TBytes, signature: TBytes, digest: RSADigestAlgorithm = 'SHA256'): boolean => {
   const pk = pki.publicKeyFromPem(bytesToPem(rsaPublicKey, 'rsaPublic')) as pki.rsa.PublicKey
   const _digest = digestMap[digest].create()
-  _digest.update(bytesToString(message), 'utf8')
-  return pk.verify(_digest.digest().getBytes(), signature.reduce((acc, item) => acc + String.fromCharCode(item), ''))
+  _digest.update(bytesToBinaryString(message))
+  return pk.verify(_digest.digest().getBytes(), bytesToBinaryString(signature))
 }
