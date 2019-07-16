@@ -1,7 +1,6 @@
 import { crypto } from '../src/crypto/crypto'
 import { MAIN_NET_CHAIN_ID } from '../src/crypto/interface'
-import * as forge from 'node-forge'
-import { binaryStringToBytes, bytesToBinaryString } from '../src/conversions/string-bytes'
+import { decryptSeed, encryptSeed } from '../src/crypto/seed-ecryption'
 const {seedWithNonce, aesDecrypt, address, concat, split, sharedKey, messageEncrypt, messageDecrypt, randomBytes, bytesToString, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode} = crypto({output: 'Base58'})
 
 const s = '1f98af466da54014bdc08bfbaaaf3c67'
@@ -134,29 +133,14 @@ test('concat split roundtrip', () => {
 })
 
 
-test('aes decrypt backward compatibility check', () => {
-  const encrypted = 'U2FsdGVkX19tuxILcDC5gj/GecPmDGEc2l51pCwdBOdtVclJ5rMT4M3Ns9Q+G4rV8wzrVTkhc/nnne5iI9ki/5uEqkGDheAi8xjQTF+MY4Q='
-  const decrypted = 'asd asd asd asd asd asd asd asd asd asd asd asd1'
-  const key = '51ce198988d0cd5a4176ab3b695351372c18912d3b613ed4496f7ce4b70e29ac'
-  const d = bytesToBinaryString(decryptCryptoJSMessage(key, encrypted))
+test('should decrypt and encrypt seed', () => {
+  const pass = '🦋'
+  const encrypted = 'U2FsdGVkX1/cD65nXrTMcViAYyCQXMrGi8XAdD8mVqFPwv6RJjKm7qHAf9jL3zgY'
+  const decrypted = 'asd asd asd asd asd asd'
+
+  const d = decryptSeed(encrypted, pass)
+  const d2 = decryptSeed(encryptSeed(decrypted, pass), pass)
   expect(d).toEqual(decrypted)
+  expect(d2).toEqual(decrypted)
+
 })
-
-
-function decryptCryptoJSMessage(passphrase: string, encrypted: string) {
-  const encBytes = base64Decode(encrypted)
-  const salt = encBytes.slice(8, 16)
-  const key_iv = evp_bytesToKey(binaryStringToBytes(passphrase), salt)
-  const key = binaryStringToBytes(key_iv.slice(0, 32))
-  const iv = binaryStringToBytes(key_iv.slice(32))
-  return aesDecrypt(encBytes.slice(16), key, 'CBC', iv)
-}
-
-function evp_bytesToKey(passphrase: Uint8Array, salt: Uint8Array, output = 48){
-  const passPlusSalt = bytesToBinaryString(concat(passphrase, salt))
-  let key = ''
-  while (key.length < output){
-    key = key + forge.md.md5.create().update(key + passPlusSalt).digest().getBytes()
-  }
-  return key
-}

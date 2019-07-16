@@ -121,8 +121,8 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
   base16Decode: (input: TBase16) => TBytes //throws (invalid input)
 
   //Utils
-  stringToBytes: (input: string) => TBytes
-  bytesToString: (input: TBinaryIn) => string
+  stringToBytes: (input: string, encoding?: 'utf8' | 'raw') => TBytes
+  bytesToString: (input: TBinaryIn, encoding?: 'utf8' | 'raw') => string
   split: (binary: TBinaryIn, ...sizes: number[]) => TBytes[]
   concat: (...binaries: TBinaryIn[]) => TBytes
 
@@ -140,11 +140,16 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
   //Messaging
   sharedKey: (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TRawStringIn) => TDesiredOut
   messageDecrypt: (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn) => string
-  messageEncrypt: (sharedKey: TBinaryIn, message: TRawStringIn) => TBytes
+  messageEncrypt: (sharedKey: TBinaryIn, message: string) => TBytes
 
   //Encryption
-  aesEncrypt: (data: TRawStringIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
-  aesDecrypt: (encryptedData: TBinaryIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
+  aesEncrypt: (data: TBinaryIn, encryptionKey: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
+  aesDecrypt: (encryptedData: TBinaryIn, encryptionKey: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
+
+  //Seed encryption (Same algorithm as in waves client and wavesKeeper).
+  //Uses EvpKDF to derive key and iv from password. Then outputs AES-CBC encrypted seed in OpenSSL format as Base64 string
+  encryptSeed: (seed: string, password: string,  encryptionRounds?: number) => TBase64
+  decryptSeed: (encryptedSeed: TBase64, password: string, encryptionRounds?: number) => string
 
   //RSA
   rsaKeyPair: (bits?: number) => TRSAKeyPair

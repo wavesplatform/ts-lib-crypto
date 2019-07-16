@@ -5,33 +5,15 @@ import { _fromRawIn, _fromIn } from '../conversions/param'
 import { hmacSHA256, sha256 } from './hashing'
 import { concat, split } from './concat-split'
 import axlsign from '../libs/axlsign'
-import { binaryStringToBytes, bytesToBinaryString, bytesToString, stringToBytes } from '../conversions/string-bytes'
-import { base16Decode, base64Encode } from '../conversions/base-xx'
+import { binaryStringToBytes, bytesToBinaryString, stringToBytes } from '../conversions/string-bytes'
 
-export const aesEncrypt = (data: TBytes, key: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes => {
+export const aesEncrypt = (data: TBinaryIn, key: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes => {
   const cipher = forge.cipher.createCipher(`AES-${mode}` as any, bytesToBinaryString(_fromIn(key)))
   cipher.start({iv: iv && forge.util.createBuffer(bytesToBinaryString(_fromIn(iv)))})
   cipher.update(forge.util.createBuffer(bytesToBinaryString(data)))
   cipher.finish()
   return binaryStringToBytes(cipher.output.getBytes())
 }
-
-// const aesModeMap: Record<AESMode, CryptoJS.Mode> = {
-//   'CBC': CryptoJS.mode.CBC,
-//   'CFB': CryptoJS.mode.CFB,
-//   'CTR': CryptoJS.mode.CTR,
-//   'OFB': CryptoJS.mode.OFB,
-//   'ECB': CryptoJS.mode.ECB,
-// }
-
-// base64Decode(
-//   CryptoJS.AES.encrypt(_toWords(_fromRawIn(data)), bytesToString(_fromRawIn(secret)),
-//     {
-//       iv: iv ? _toWords(_fromIn(iv)) : undefined,
-//       mode: aesModeMap[mode],
-//     })
-//     .toString()
-// )
 
 export const aesDecrypt = (encryptedData: TBinaryIn, key: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes => {
   const decipher = forge.cipher.createDecipher(`AES-${mode}` as any, bytesToBinaryString(_fromIn(key)))
@@ -43,14 +25,6 @@ export const aesDecrypt = (encryptedData: TBinaryIn, key: TBinaryIn, mode: AESMo
   }
   return binaryStringToBytes(decipher.output.getBytes())
 }
-// export const aesDecrypt = (encryptedData: TBinaryIn, secret: TRawStringIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes =>
-//   _fromWords(
-//     CryptoJS.AES.decrypt(base64Encode(encryptedData), bytesToString(_fromRawIn(secret)),
-//       {
-//         iv: iv ? _toWords(_fromIn(iv)) : undefined,
-//         mode: aesModeMap[mode],
-//       })
-//   )
 
 export const messageEncrypt = (sharedKey: TBinaryIn, message: string): TBytes => {
   const CEK = randomBytes(32)
