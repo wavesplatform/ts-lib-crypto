@@ -11,9 +11,19 @@ export interface INonceSeed {
   nonce?: number
 }
 
-export type AESMode = 'CBC' | 'CFB' | 'CTR' | 'OFB' | 'ECB'
+export type AESMode = 'CBC' | 'CFB' | 'CTR' | 'OFB' | 'ECB' | 'GCM'
 
-export type RSADigestAlgorithm = 'MD5' |'SHA1' |'SHA224' |'SHA256' |'SHA384' |'SHA512' |'SHA3-224' |'SHA3-256' |'SHA3-384' |'SHA3-512'
+export type RSADigestAlgorithm =
+  'MD5'
+  | 'SHA1'
+  | 'SHA224'
+  | 'SHA256'
+  | 'SHA384'
+  | 'SHA512'
+  | 'SHA3-224'
+  | 'SHA3-256'
+  | 'SHA3-384'
+  | 'SHA3-512'
 
 export type TRandomTypesMap = {
   Array8: number[]
@@ -118,6 +128,7 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
 
   //Random
   random<T extends keyof TRandomTypesMap>(count: number, type: T): TRandomTypesMap[T]
+
   randomBytes: (size: number) => TBytes
   randomSeed: (wordsCount?: number) => string
 

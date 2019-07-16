@@ -1,7 +1,8 @@
 import { crypto } from '../src/crypto/crypto'
 import { MAIN_NET_CHAIN_ID } from '../src/crypto/interface'
-
-const { seedWithNonce, aesDecrypt, address, concat, split, sharedKey, messageEncrypt, messageDecrypt, randomBytes, bytesToString, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode } = crypto({ output: 'Base58' })
+import * as forge from 'node-forge'
+import { binaryStringToBytes, bytesToBinaryString } from '../src/conversions/string-bytes'
+const {seedWithNonce, aesDecrypt, address, concat, split, sharedKey, messageEncrypt, messageDecrypt, randomBytes, bytesToString, stringToBytes, keyPair, publicKey, privateKey, signBytes, verifySignature, verifyAddress, base58Decode, base58Encode, base16Decode, base16Encode, base64Decode, base64Encode} = crypto({output: 'Base58'})
 
 const s = '1f98af466da54014bdc08bfbaaaf3c67'
 
@@ -22,8 +23,8 @@ test('address', () =>
 test('verify address', () => {
   const a = address(s, MAIN_NET_CHAIN_ID)
   expect(verifyAddress(a)).toBe(true)
-  expect(verifyAddress(a, { chainId: MAIN_NET_CHAIN_ID })).toBe(true)
-  expect(verifyAddress(a, { publicKey: publicKey(s) })).toBe(true)
+  expect(verifyAddress(a, {chainId: MAIN_NET_CHAIN_ID})).toBe(true)
+  expect(verifyAddress(a, {publicKey: publicKey(s)})).toBe(true)
 })
 
 test('keyPair', () =>
@@ -87,7 +88,7 @@ test('output equality', () => {
     address: addressBytes,
     signBytes: signBytesBytes,
     keyPair: keyPairBytes,
-  } = crypto({ output: 'Bytes' })
+  } = crypto({output: 'Bytes'})
 
   const message = [1, 2, 3]
   const random = randomBytes(64)
@@ -133,14 +134,29 @@ test('concat split roundtrip', () => {
 })
 
 
-
 test('aes decrypt backward compatibility check', () => {
   const encrypted = 'U2FsdGVkX19tuxILcDC5gj/GecPmDGEc2l51pCwdBOdtVclJ5rMT4M3Ns9Q+G4rV8wzrVTkhc/nnne5iI9ki/5uEqkGDheAi8xjQTF+MY4Q='
   const decrypted = 'asd asd asd asd asd asd asd asd asd asd asd asd1'
   const key = '51ce198988d0cd5a4176ab3b695351372c18912d3b613ed4496f7ce4b70e29ac'
-
-  const d = bytesToString(aesDecrypt(base64Decode(encrypted), key))
-
+  const d = bytesToBinaryString(decryptCryptoJSMessage(key, encrypted))
   expect(d).toEqual(decrypted)
 })
 
+
+function decryptCryptoJSMessage(passphrase: string, encrypted: string) {
+  const encBytes = base64Decode(encrypted)
+  const salt = encBytes.slice(8, 16)
+  const key_iv = evp_bytesToKey(binaryStringToBytes(passphrase), salt)
+  const key = binaryStringToBytes(key_iv.slice(0, 32))
+  const iv = binaryStringToBytes(key_iv.slice(32))
+  return aesDecrypt(encBytes.slice(16), key, 'CBC', iv)
+}
+
+function evp_bytesToKey(passphrase: Uint8Array, salt: Uint8Array, output = 48){
+  const passPlusSalt = bytesToBinaryString(concat(passphrase, salt))
+  let key = ''
+  while (key.length < output){
+    key = key + forge.md.md5.create().update(key + passPlusSalt).digest().getBytes()
+  }
+  return key
+}

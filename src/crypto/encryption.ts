@@ -6,12 +6,13 @@ import { hmacSHA256, sha256 } from './hashing'
 import { concat, split } from './concat-split'
 import axlsign from '../libs/axlsign'
 import { binaryStringToBytes, bytesToBinaryString, bytesToString, stringToBytes } from '../conversions/string-bytes'
-import { base64Encode } from '../conversions/base-xx'
+import { base16Decode, base64Encode } from '../conversions/base-xx'
 
-export const aesEncrypt = (data: TRawStringIn, secret: TRawStringIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes => {
-  const cipher = forge.cipher.createCipher(`AES-${mode}` as any, bytesToBinaryString(_fromRawIn(secret)))
-  cipher.start({iv: iv && bytesToBinaryString(_fromIn(iv))})
-  cipher.update(forge.util.createBuffer(_fromRawIn(data)))
+export const aesEncrypt = (data: TBytes, key: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes => {
+  const cipher = forge.cipher.createCipher(`AES-${mode}` as any, bytesToBinaryString(_fromIn(key)))
+  cipher.start({iv: iv && forge.util.createBuffer(bytesToBinaryString(_fromIn(iv)))})
+  cipher.update(forge.util.createBuffer(bytesToBinaryString(data)))
+  cipher.finish()
   return binaryStringToBytes(cipher.output.getBytes())
 }
 
@@ -32,11 +33,14 @@ export const aesEncrypt = (data: TRawStringIn, secret: TRawStringIn, mode: AESMo
 //     .toString()
 // )
 
-export const aesDecrypt = (encryptedData: TBinaryIn, secret: TRawStringIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes => {
-  const binsecret =  bytesToString(_fromRawIn(secret))
-  const decipher = forge.cipher.createDecipher(`AES-${mode}` as any, binsecret)
-  decipher.start({iv: iv && bytesToBinaryString(_fromIn(iv))})
-  decipher.update(forge.util.createBuffer(_fromIn(encryptedData)))
+export const aesDecrypt = (encryptedData: TBinaryIn, key: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes => {
+  const decipher = forge.cipher.createDecipher(`AES-${mode}` as any, bytesToBinaryString(_fromIn(key)))
+  decipher.start({iv: iv && forge.util.createBuffer(bytesToBinaryString(_fromIn(iv)))})
+  const encbuf = forge.util.createBuffer(bytesToBinaryString(_fromIn(encryptedData)))
+  decipher.update(encbuf)
+  if (!decipher.finish()){
+     throw new Error('Failed to decrypt data with provided key')
+  }
   return binaryStringToBytes(decipher.output.getBytes())
 }
 // export const aesDecrypt = (encryptedData: TBinaryIn, secret: TRawStringIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes =>
@@ -48,10 +52,10 @@ export const aesDecrypt = (encryptedData: TBinaryIn, secret: TRawStringIn, mode:
 //       })
 //   )
 
-export const messageEncrypt = (sharedKey: TBinaryIn, message: TRawStringIn): TBytes => {
+export const messageEncrypt = (sharedKey: TBinaryIn, message: string): TBytes => {
   const CEK = randomBytes(32)
   const IV = randomBytes(16)
-  const m = _fromRawIn(message)
+  const m = stringToBytes(message)
 
   const Cc = aesEncrypt(m, CEK, 'CTR', IV)
   const Ccek = aesEncrypt(CEK, sharedKey, 'ECB')
@@ -77,7 +81,7 @@ export const messageDecrypt = (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn
     _Mhmac,
     iv,
     Cc,
-  ] = split(encryptedMessage, 64, 32, 32, 16)
+  ] = split(encryptedMessage, 48, 32, 32, 16)
 
   const CEK = aesDecrypt(Ccek, sharedKey, 'ECB')
 
