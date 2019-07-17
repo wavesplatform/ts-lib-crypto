@@ -1,9 +1,18 @@
 import { stringToBytes } from '../src/conversions/string-bytes'
-import { pemToBytes, rsaKeyPair, rsaSign, rsaVerify } from '../src/crypto/rsa'
+import { pemToBytes, rsaKeyPair, rsaKeyPairSync, rsaSign, rsaVerify } from '../src/crypto/rsa'
 import { base64Encode } from '../src/conversions/base-xx'
 
 test('Should get correct rsa signature', () => {
-  const pair = rsaKeyPair()
+  const pair = rsaKeyPairSync()
+  const msg = 'hello world'
+  const msgBytes = stringToBytes(msg)
+  const signature = rsaSign(pair.rsaPrivate, msgBytes)
+  const valid = rsaVerify(pair.rsaPublic, msgBytes, signature)
+  expect(valid).toBe(true)
+})
+
+test('Should get correct rsa signature with async keypair generation', async () => {
+  const pair = await rsaKeyPair()
   const msg = 'hello world'
   const msgBytes = stringToBytes(msg)
   const signature = rsaSign(pair.rsaPrivate, msgBytes)

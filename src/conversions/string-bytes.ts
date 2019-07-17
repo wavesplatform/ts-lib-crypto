@@ -2,15 +2,25 @@ import { TBytes, TBinaryIn } from '../crypto/interface'
 import { _fromIn } from './param'
 import { utf8ArrayToStr, strToUtf8Array } from '../libs/Utf8'
 
-/**
- * Converts string to utf-8 array
- */
-export const stringToBytes = (str: string): TBytes => strToUtf8Array(str)
+export const stringToBytes = (str: string, encoding: 'utf8' | 'raw' = 'utf8'): TBytes => {
+  if (encoding === 'utf8'){
+    return strToUtf8Array(str)
+  } else if (encoding === 'raw'){
+    return Uint8Array.from([...str].map(c => c.charCodeAt(0)))
+  }else {
+    throw new Error(`Unsupported encoding ${encoding}`)
+  }
+}
 
-/**
- * Reads bytes as utf-8 string
- */
-export const bytesToString = (bytes: TBinaryIn): string => utf8ArrayToStr(Array.from(_fromIn(bytes)))
+export const bytesToString = (bytes: TBinaryIn, encoding: 'utf8' | 'raw' = 'utf8'): string => {
+  if (encoding === 'utf8'){
+    return utf8ArrayToStr(Array.from(_fromIn(bytes)))
+  } else if (encoding === 'raw'){
+    return String.fromCharCode.apply(null, Array.from(_fromIn(bytes)))
+  }else {
+    throw new Error(`Unsupported encoding ${encoding}`)
+  }
+}
 
 /**
  * Converts each character to byte

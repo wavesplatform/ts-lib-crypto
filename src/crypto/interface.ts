@@ -152,7 +152,8 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
   decryptSeed: (encryptedSeed: TBase64, password: string, encryptionRounds?: number) => string
 
   //RSA
-  rsaKeyPair: (bits?: number) => TRSAKeyPair
+  rsaKeyPair: (bits?: number, e?: number) => Promise<TRSAKeyPair>
+  rsaKeyPairSync: (bits?: number, e?: number) => TRSAKeyPair
   rsaSign: (rsaPrivateKey: TBytes, message: TBytes, digest?: RSADigestAlgorithm) => TBytes
   rsaVerify: (rsaPublicKey: TBytes, message: TBytes, signature: TBytes, digest?: RSADigestAlgorithm) => boolean
 }

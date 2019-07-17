@@ -1,7 +1,7 @@
 import { pki, md } from 'node-forge'
 import { RSADigestAlgorithm, TBytes, TRSAKeyPair } from './interface'
 import { base64Decode, base64Encode } from '../conversions/base-xx'
-import { binaryStringToBytes, bytesToBinaryString } from '../conversions/string-bytes'
+import { stringToBytes, bytesToString } from '../conversions/string-bytes'
 
 export const pemToBytes = (pem: string) => base64Decode(
   pem.trim()
@@ -32,12 +32,24 @@ export const bytesToPem = (bytes: Uint8Array, type: keyof typeof pemTypeMap) => 
   return result
 }
 
-export const rsaKeyPair = (bits = 512): TRSAKeyPair => {
-  const kp = pki.rsa.generateKeyPair(bits)
+export const rsaKeyPairSync = (bits?: number, e?: number): TRSAKeyPair => {
+  const kp = pki.rsa.generateKeyPair(bits, e)
   return {
     rsaPrivate: pemToBytes(pki.privateKeyToPem(kp.privateKey)),
     rsaPublic: pemToBytes(pki.publicKeyToPem(kp.publicKey)),
   }
+}
+
+export const rsaKeyPair = async (bits?: number, e?: number): Promise<TRSAKeyPair> => {
+  return new Promise<TRSAKeyPair>((resolve, reject) => {
+    pki.rsa.generateKeyPair(bits, e, function (err, kp) {
+      if (err) reject(err)
+      resolve({
+        rsaPrivate: pemToBytes(pki.privateKeyToPem(kp.privateKey)),
+        rsaPublic: pemToBytes(pki.publicKeyToPem(kp.publicKey)),
+      })
+    })
+  })
 }
 
 const digestCreatorPlaceHolder: any = (type: string) => () => {
@@ -60,13 +72,13 @@ export const rsaSign = (rsaPrivateKey: TBytes, message: TBytes, digest: RSADiges
   const s = bytesToPem(rsaPrivateKey, 'rsaPrivateNonEncrypted')
   const sk = pki.privateKeyFromPem(s) as pki.rsa.PrivateKey
   const _digest = digestMap[digest].create()
-  _digest.update(bytesToBinaryString(message))
-  return binaryStringToBytes(sk.sign(_digest ))
+  _digest.update(bytesToString(message, 'raw'))
+  return stringToBytes(sk.sign(_digest), 'raw')
 }
 
 export const rsaVerify = (rsaPublicKey: TBytes, message: TBytes, signature: TBytes, digest: RSADigestAlgorithm = 'SHA256'): boolean => {
   const pk = pki.publicKeyFromPem(bytesToPem(rsaPublicKey, 'rsaPublic')) as pki.rsa.PublicKey
   const _digest = digestMap[digest].create()
-  _digest.update(bytesToBinaryString(message))
-  return pk.verify(_digest.digest().getBytes(), bytesToBinaryString(signature))
+  _digest.update(bytesToString(message), 'raw')
+  return pk.verify(_digest.digest().getBytes(), bytesToString(signature, 'raw'))
 }

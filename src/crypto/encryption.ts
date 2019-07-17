@@ -5,25 +5,25 @@ import { _fromRawIn, _fromIn } from '../conversions/param'
 import { hmacSHA256, sha256 } from './hashing'
 import { concat, split } from './concat-split'
 import axlsign from '../libs/axlsign'
-import { binaryStringToBytes, bytesToBinaryString, stringToBytes } from '../conversions/string-bytes'
+import { stringToBytes, bytesToString } from '../conversions/string-bytes'
 
 export const aesEncrypt = (data: TBinaryIn, key: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes => {
-  const cipher = forge.cipher.createCipher(`AES-${mode}` as any, bytesToBinaryString(_fromIn(key)))
-  cipher.start({iv: iv && forge.util.createBuffer(bytesToBinaryString(_fromIn(iv)))})
-  cipher.update(forge.util.createBuffer(bytesToBinaryString(data)))
+  const cipher = forge.cipher.createCipher(`AES-${mode}` as any, bytesToString(_fromIn(key), 'raw'))
+  cipher.start({iv: iv && forge.util.createBuffer(bytesToString(_fromIn(iv), 'raw'))})
+  cipher.update(forge.util.createBuffer(bytesToString(data, 'raw')))
   cipher.finish()
-  return binaryStringToBytes(cipher.output.getBytes())
+  return stringToBytes(cipher.output.getBytes(), 'raw')
 }
 
 export const aesDecrypt = (encryptedData: TBinaryIn, key: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes => {
-  const decipher = forge.cipher.createDecipher(`AES-${mode}` as any, bytesToBinaryString(_fromIn(key)))
-  decipher.start({iv: iv && forge.util.createBuffer(bytesToBinaryString(_fromIn(iv)))})
-  const encbuf = forge.util.createBuffer(bytesToBinaryString(_fromIn(encryptedData)))
+  const decipher = forge.cipher.createDecipher(`AES-${mode}` as any, bytesToString(_fromIn(key), 'raw'))
+  decipher.start({iv: iv && forge.util.createBuffer(bytesToString(_fromIn(iv), 'raw'))})
+  const encbuf = forge.util.createBuffer(bytesToString(_fromIn(encryptedData), 'raw'))
   decipher.update(encbuf)
   if (!decipher.finish()){
      throw new Error('Failed to decrypt data with provided key')
   }
-  return binaryStringToBytes(decipher.output.getBytes())
+  return stringToBytes(decipher.output.getBytes(), 'raw')
 }
 
 export const messageEncrypt = (sharedKey: TBinaryIn, message: string): TBytes => {

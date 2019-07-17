@@ -8,7 +8,8 @@ import { _hashChain, sha256, keccak, blake2b } from './hashing'
 import { privateKey, address, publicKey, keyPair, seedWithNonce } from './address-keys-seed'
 import { signBytes } from './sign'
 import { verifyAddress, verifyPublicKey, verifySignature } from './verification'
-import { rsaKeyPair, rsaSign, rsaVerify} from './rsa'
+import { rsaKeyPair, rsaKeyPairSync, rsaSign, rsaVerify } from './rsa'
+import { decryptSeed, encryptSeed } from './seed-ecryption'
 
 type TOutputTypesMap = {
   Bytes: Uint8Array
@@ -80,7 +81,10 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     messageEncrypt,
     aesDecrypt,
     aesEncrypt,
+    encryptSeed,
+    decryptSeed,
     rsaKeyPair,
+    rsaKeyPairSync,
     rsaSign,
     rsaVerify,
     split,
