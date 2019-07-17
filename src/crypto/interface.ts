@@ -11,7 +11,19 @@ export interface INonceSeed {
   nonce?: number
 }
 
-export type AESMode = 'CBC' | 'CFB' | 'CTR' | 'OFB' | 'ECB'
+export type AESMode = 'CBC' | 'CFB' | 'CTR' | 'OFB' | 'ECB' | 'GCM'
+
+export type RSADigestAlgorithm =
+  'MD5'
+  | 'SHA1'
+  | 'SHA224'
+  | 'SHA256'
+  | 'SHA384'
+  | 'SHA512'
+  | 'SHA3-224'
+  | 'SHA3-256'
+  | 'SHA3-384'
+  | 'SHA3-512'
 
 export type TRandomTypesMap = {
   Array8: number[]
@@ -40,7 +52,7 @@ export type TBinaryIn = TBytes | TBase58 | number[]
 
 export type TRawStringInDiscriminator = { TRawStringIn: null }
 
-//Every input stinrg could be represented as Uint8Array or number[] or a string itself
+//Every input string could be represented as Uint8Array or number[] or a string itself
 export type TRawStringIn = TBytes | string | number[] | TRawStringInDiscriminator
 
 export type TBinaryOut = TBytes | TBase58
@@ -55,6 +67,12 @@ export type TKeyPair<T extends TBinaryIn = TBase58> = TPublicKey<T> & TPrivateKe
 
 //TSeed is a union of types that could represent a Waves seed.
 export type TSeed = TRawStringIn | INonceSeed
+
+//TRSAKeyPair is X509Encoded RSA key pair
+export type TRSAKeyPair = {
+  rsaPublic: TBytes
+  rsaPrivate: TBytes
+}
 
 /* Consider that every method should handle TSeed
    seamlessly so in case of absence of type union operator
@@ -89,7 +107,7 @@ export interface ISeedEmbeded<TDesiredOut extends TBinaryOut = TBase58> {
 
 export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
 
-  //Hashing 
+  //Hashing
   blake2b: (input: TBinaryIn) => TBytes
   keccak: (input: TBinaryIn) => TBytes
   sha256: (input: TBinaryIn) => TBytes
@@ -103,13 +121,14 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
   base16Decode: (input: TBase16) => TBytes //throws (invalid input)
 
   //Utils
-  stringToBytes: (input: string) => TBytes
-  bytesToString: (input: TBinaryIn) => string
+  stringToBytes: (input: string, encoding?: 'utf8' | 'raw') => TBytes
+  bytesToString: (input: TBinaryIn, encoding?: 'utf8' | 'raw') => string
   split: (binary: TBinaryIn, ...sizes: number[]) => TBytes[]
   concat: (...binaries: TBinaryIn[]) => TBytes
 
   //Random
   random<T extends keyof TRandomTypesMap>(count: number, type: T): TRandomTypesMap[T]
+
   randomBytes: (size: number) => TBytes
   randomSeed: (wordsCount?: number) => string
 
@@ -121,9 +140,20 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
   //Messaging
   sharedKey: (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TRawStringIn) => TDesiredOut
   messageDecrypt: (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn) => string
-  messageEncrypt: (sharedKey: TBinaryIn, message: TRawStringIn) => TBytes
+  messageEncrypt: (sharedKey: TBinaryIn, message: string) => TBytes
 
   //Encryption
-  aesEncrypt: (data: TRawStringIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
-  aesDecrypt: (encryptedData: TBinaryIn, secret: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
+  aesEncrypt: (data: TBinaryIn, encryptionKey: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
+  aesDecrypt: (encryptedData: TBinaryIn, encryptionKey: TBinaryIn, mode?: AESMode, iv?: TBinaryIn) => TBytes
+
+  //Seed encryption (Same algorithm as in waves client and wavesKeeper).
+  //Uses EvpKDF to derive key and iv from password. Then outputs AES-CBC encrypted seed in OpenSSL format as Base64 string
+  encryptSeed: (seed: string, password: string,  encryptionRounds?: number) => TBase64
+  decryptSeed: (encryptedSeed: TBase64, password: string, encryptionRounds?: number) => string
+
+  //RSA
+  rsaKeyPair: (bits?: number, e?: number) => Promise<TRSAKeyPair>
+  rsaKeyPairSync: (bits?: number, e?: number) => TRSAKeyPair
+  rsaSign: (rsaPrivateKey: TBytes, message: TBytes, digest?: RSADigestAlgorithm) => TBytes
+  rsaVerify: (rsaPublicKey: TBytes, message: TBytes, signature: TBytes, digest?: RSADigestAlgorithm) => boolean
 }
