@@ -16,15 +16,18 @@
     "testEnvironment": "node"
   },
   "scripts": {
-    "build_native": "tsc; cp src/libs/*.d.ts dist/libs;cp src/libs/*.js dist/libs",
-    "build": "ts-node build/build.ts cp src/libs/*.d.ts dist/libs;cp src/libs/*.js dist/libs",
-    "build2": "webpack --config webpack.config.js --env",
+    "build": "ts-node build/build.ts cp src/libs/*.d.ts dist/libs;cp src/libs/*.js dist/libs && npm run build-min",
+    "build-min": "webpack --config webpack.config.js --env",
     "deploy": "cd dist; npm publish;",
     "fix-style": "tslint --fix -c tslint.json '{src,test,usage}/**/*{.ts,.tsx}'",
     "test": "jest",
     "test:debug": "node --inspect node_modules/.bin/jest --runInBand"
   },
   "author": "Yuriy Naydenov",
+  "contributors": [{
+    "email": "siemarell@gmail.com",
+    "name": "Sergey Borzov"
+  }],
   "license": "MIT",
   "repository": {
     "type": "git",
