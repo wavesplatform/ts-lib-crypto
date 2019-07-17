@@ -20,13 +20,14 @@ export const aesDecrypt = (encryptedData: TBinaryIn, key: TBinaryIn, mode: AESMo
   decipher.start({iv: iv && forge.util.createBuffer(bytesToString(_fromIn(iv), 'raw'))})
   const encbuf = forge.util.createBuffer(bytesToString(_fromIn(encryptedData), 'raw'))
   decipher.update(encbuf)
-  if (!decipher.finish()){
-     throw new Error('Failed to decrypt data with provided key')
+  if (!decipher.finish()) {
+    throw new Error('Failed to decrypt data with provided key')
   }
   return stringToBytes(decipher.output.getBytes(), 'raw')
 }
 
 export const messageEncrypt = (sharedKey: TBinaryIn, message: string): TBytes => {
+  const version = Uint8Array.from([1])
   const CEK = randomBytes(32)
   const IV = randomBytes(16)
   const m = stringToBytes(message)
@@ -37,6 +38,7 @@ export const messageEncrypt = (sharedKey: TBinaryIn, message: string): TBytes =>
   const CEKhmac = hmacSHA256(concat(CEK, IV), sharedKey)
 
   const packageBytes = concat(
+    version,
     Ccek,
     CEKhmac,
     Mhmac,
@@ -50,12 +52,13 @@ export const messageEncrypt = (sharedKey: TBinaryIn, message: string): TBytes =>
 export const messageDecrypt = (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn): string => {
 
   const [
+    version,
     Ccek,
     _CEKhmac,
     _Mhmac,
     iv,
     Cc,
-  ] = split(encryptedMessage, 48, 32, 32, 16)
+  ] = split(encryptedMessage, 1, 48, 32, 32, 16)
 
   const CEK = aesDecrypt(Ccek, sharedKey, 'ECB')
 
