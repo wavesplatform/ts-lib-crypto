@@ -75,7 +75,7 @@ export const messageDecrypt = (sharedKey: TBinaryIn, encryptedMessage: TBinaryIn
   if (!isValidMessage)
     throw new Error('Invalid message')
 
-  return String.fromCharCode.apply(null, Array.from(M))
+  return bytesToString(M)
 }
 
 export const sharedKey = (privateKeyFrom: TBinaryIn, publicKeyTo: TBinaryIn, prefix: TRawStringIn): TBytes => {

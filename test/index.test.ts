@@ -107,7 +107,7 @@ test('generate shared key', () => {
 })
 
 test('encrypt and decrypt message roundtrip', () => {
-  const originalMessage = 'Waves is awesome!'
+  const originalMessage = 'Waves is awesome! Русский текст! 🦓'
   const prefix = 'waves'
 
   const a = keyPair(s)
