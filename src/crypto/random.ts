@@ -1,26 +1,15 @@
+import * as forge from 'node-forge'
 import { TBytes, TRandomTypesMap } from './interface'
 import { seedWordsList } from './seed-words-list'
+import { stringToBytes } from '../conversions/string-bytes'
 
-
-const _random = (count: number) => {
-  if (isBrowser) {
-    const arr = new Uint8Array(count)
-    const crypto = ((global as any).crypto || (global as any).msCrypto)
-    crypto.getRandomValues(arr)
-    return arr
-  }
-
-  const crypto = require('crypto')
-  return Uint8Array.from(crypto.randomBytes(count))
-}
+const _random = (count: number) => stringToBytes(forge.random.getBytesSync(count), 'raw')
 
 const ensureBuffer = () => {
   try { const b = new Buffer(1) } catch (e) {
     throw new Error('Buffer not supported in this environment. Use Node.js or Browserify for browser support.')
   }
 }
-
-const isBrowser = typeof window !== 'undefined' && ({}).toString.call(window) === '[object Window]'
 
 export const random = <T extends keyof TRandomTypesMap>(count: number, type: T): TRandomTypesMap[T] => {
   switch (type) {
