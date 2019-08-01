@@ -40,9 +40,9 @@ export const rsaKeyPairSync = (bits?: number, e?: number): TRSAKeyPair => {
   }
 }
 
-export const rsaKeyPair = async (bits?: number, e?: number): Promise<TRSAKeyPair> => {
-  return new Promise<TRSAKeyPair>((resolve, reject) => {
-    pki.rsa.generateKeyPair(bits, e, function (err, kp) {
+export const rsaKeyPair = async (bits?: number, e?: number): Promise<TRSAKeyPair> =>
+  new Promise<TRSAKeyPair>((resolve, reject) => {
+    pki.rsa.generateKeyPair(bits, e, function (err: any, kp: any) {
       if (err) reject(err)
       resolve({
         rsaPrivate: pemToBytes(pki.privateKeyToPem(kp.privateKey)),
@@ -50,7 +50,6 @@ export const rsaKeyPair = async (bits?: number, e?: number): Promise<TRSAKeyPair
       })
     })
   })
-}
 
 const digestCreatorPlaceHolder: any = (type: string) => () => {
   throw new Error(`Digest ${type} is unsupported`)

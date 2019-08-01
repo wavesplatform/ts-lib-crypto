@@ -25,10 +25,12 @@
     "test:debug": "node --inspect node_modules/.bin/jest --runInBand"
   },
   "author": "Yuriy Naydenov",
-  "contributors": [{
-    "email": "siemarell@gmail.com",
-    "name": "Sergey Borzov"
-  }],
+  "contributors": [
+    {
+      "email": "siemarell@gmail.com",
+      "name": "Sergey Borzov"
+    }
+  ],
   "license": "MIT",
   "repository": {
     "type": "git",
