@@ -179,7 +179,7 @@ publicKey(seedWithNonce(seed, 0)) // 4KxUVD9NtyRJjU3BCvPgJSttoJX7cb3DMdDTNucLN12
 ```
 Or even from private key, it's usefull in some cases:
 ```ts
-import { publicKey, seedWithNonce } from '@waves/ts-lib-crypto'
+import { publicKey, privateKey, seedWithNonce } from '@waves/ts-lib-crypto'
 const seed = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
 const pk = privateKey(seed)
 publicKey({ privateKey: pk }) // 4KxUVD9NtyRJjU3BCvPgJSttoJX7cb3DMdDTNucLN121
