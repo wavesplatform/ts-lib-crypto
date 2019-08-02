@@ -85,7 +85,7 @@ export interface ISeedRelated<TDesiredOut extends TBinaryOut = TBase58> {
   //Seeds, keys and addresses
   seedWithNonce: (seed: TSeed, nonce: number) => INonceSeed
   keyPair: (seed: TSeed) => TKeyPair<TDesiredOut>
-  publicKey: (seed: TSeed) => TDesiredOut
+  publicKey: (seedOrPrivateKey: TSeed | TPrivateKey<TBinaryIn>) => TDesiredOut
   privateKey: (seed: TSeed) => TDesiredOut
   address: (seedOrPublicKey: TSeed | TPublicKey<TBinaryIn>, chainId?: TChainId) => TDesiredOut
 
@@ -148,7 +148,7 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
 
   //Seed encryption (Same algorithm as in waves client and wavesKeeper).
   //Uses EvpKDF to derive key and iv from password. Then outputs AES-CBC encrypted seed in OpenSSL format as Base64 string
-  encryptSeed: (seed: string, password: string,  encryptionRounds?: number) => TBase64
+  encryptSeed: (seed: string, password: string, encryptionRounds?: number) => TBase64
   decryptSeed: (encryptedSeed: TBase64, password: string, encryptionRounds?: number) => string
 
   //RSA

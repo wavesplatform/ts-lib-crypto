@@ -1,9 +1,9 @@
-import { TSeed, INonceSeed, TBytes, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, TBinaryIn, TKeyPair } from './interface'
+import { TSeed, INonceSeed, TBytes, TChainId, MAIN_NET_CHAIN_ID, TPublicKey, TBinaryIn, TKeyPair, TPrivateKey } from './interface'
 import { Seed } from '../extensions/seed'
 import { _hashChain, sha256 } from './hashing'
 import { _fromIn } from '../conversions/param'
 import { concat } from './concat-split'
-import { isPublicKey } from './util'
+import { isPublicKey, isPrivateKey } from './util'
 import axlsign from '../libs/axlsign'
 
 export const seedWithNonce = (seed: TSeed, nonce: number): INonceSeed => ({ seed: Seed.toBinary(seed).seed, nonce })
@@ -47,8 +47,10 @@ export const address = (seedOrPublicKey: TSeed | TPublicKey<TBinaryIn>, chainId:
     buildAddress(_fromIn(seedOrPublicKey.publicKey), chainId) :
     address(keyPair(seedOrPublicKey), chainId)
 
-export const publicKey = (seed: TSeed): TBytes =>
-  keyPair(seed).publicKey
+export const publicKey = (seedOrPrivateKey: TSeed | TPrivateKey<TBinaryIn>): TBytes =>
+  isPrivateKey(seedOrPrivateKey) ?
+    axlsign.generateKeyPair(_fromIn(seedOrPrivateKey.privateKey)).public :
+    keyPair(seedOrPrivateKey).publicKey
 
 export const privateKey = (seed: TSeed): TBytes =>
   keyPair(seed).privateKey
