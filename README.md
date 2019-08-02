@@ -173,10 +173,18 @@ console.log(seedWordsList) // [ 'abandon','ability','able', ... 2045 more items 
 You could get public key either from raw seed-phrase or seed with nonce:
 ```ts
 import { publicKey, seedWithNonce } from '@waves/ts-lib-crypto'
-const  seed = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
+const seed = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
 publicKey(seed) // 4KxUVD9NtyRJjU3BCvPgJSttoJX7cb3DMdDTNucLN121
 publicKey(seedWithNonce(seed, 0)) // 4KxUVD9NtyRJjU3BCvPgJSttoJX7cb3DMdDTNucLN121
 ```
+Or even from private key, it's usefull in some cases:
+```ts
+import { publicKey, seedWithNonce } from '@waves/ts-lib-crypto'
+const seed = 'uncle push human bus echo drastic garden joke sand warfare sentence fossil title color combine'
+const pk = privateKey(seed)
+publicKey({ privateKey: pk }) // 4KxUVD9NtyRJjU3BCvPgJSttoJX7cb3DMdDTNucLN121
+```
+
 ### privateKey
 Same with private key:
 ```ts
