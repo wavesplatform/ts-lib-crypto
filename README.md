@@ -36,7 +36,7 @@ The waves protocol is a set of rules named consensus by which nodes reach an agr
  - **[Encryption](#encryption)**
 	 - [aesEncrypt](#aesEncrypt)
 	 - [aesDecrypt](#aesDecrypt)
-- **[Seed encryption](#Seed encryption)**
+- **[Seed encryption](#Seed-encryption)**
  - **[Utils](#utils)**
 	 - [split](#split)
 	 - [concat](#concat)
