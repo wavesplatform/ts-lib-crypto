@@ -29,13 +29,14 @@ The waves protocol is a set of rules named consensus by which nodes reach an agr
 	 - [base16](#base-encodingdecoding)
 	 - [base58](#base-encodingdecoding)
 	 - [base64](#base-encodingdecoding)
- - **Messaging**
-	 - sharedKey
-	 - messageDecrypt
-	 - messageEncrypt
- - **Encryption**
-	 - aesEncrypt
-	 - aesDecrypt
+ - **[Messaging](#messaging)**
+	 - [sharedKey](#sharedKey)
+	 - [messageEncrypt](#messageEncrypt)
+	 - [messageDecrypt](#messageDecrypt)
+ - **[Encryption](#encryption)**
+	 - [aesEncrypt](#aesEncrypt)
+	 - [aesDecrypt](#aesDecrypt)
+- **[Seed encryption](#Seed encryption)**
  - **[Utils](#utils)**
 	 - [split](#split)
 	 - [concat](#concat)
@@ -332,12 +333,57 @@ const base64String = base64Encode(bytes) // IFnsXZ7WQLdXIuxqL/dokOUj6kYkiHVJ23Yd
 const bytesFromBase64 = base64Decode(base64String)
 ```
 ## Messaging
-	 - sharedKey
-	 - messageDecrypt
-	 - messageEncrypt
+These methods implement waves messaging protocol 
+- sharedKey 
+- messageDecrypt
+- messageEncrypt
+```typescript
+import { sharedKey, messageEncrypt, messageDecrypt, keyPair } from '@waves/ts-lib-crypto'
+
+const bobKeyPair = keyPair('Bob')
+const aliceKeyPair = keyPair('Alice')
+const msg = 'hello world'
+
+// Alice derives shared key and encrypts message
+const sharedKeyA = sharedKey(aliceKeyPair.privateKey, bobKeyPair.publicKey, 'waves') 
+const encrypted = messageEncrypt(sharedKeyA, msg)
+
+// Bob decrypts message derives shared key and decrypts message
+const sharedKeyB = sharedKey(aliceKeyPair.privateKey, bobKeyPair.publicKey, 'waves') 
+const decrypted = messageDecrypt(sharedKeyB, encrypted)
+```
 ## Encryption
-	 - aesEncrypt
-	 - aesDecrypt
+This is low level functionality where you have to generate key and iv yourself 
+#### aesEncrypt
+Encrypt bytes using AES algorithm. 
+```typescript
+import { aesEncrypt, randomBytes } from '@waves/ts-lib-crypto'
+
+const data = Uint8Arraty.from([1,2,3])
+const mode =  'CBC' // Possible modes are 'CBC' | 'CFB' | 'CTR' | 'OFB' | 'ECB' | 'GCM'
+
+const key = randomBytes(32)
+const iv = randomBytes(32)
+
+const encrypted = aesEncrypt(data, key, mode, iv)
+
+```
+#### aesDecrypt
+Decrypt bytes using AES algorithm
+```typescript
+const decrypted = aesDecrypt(encrypted, key, mode, iv)
+```
+
+## Seed encryption
+These functions implements seed encryption protocol used in DexClient and WavesKeeper
+```typescript
+import { encryptSeed, decryptSeed } from '@waves/ts-lib-crypto'
+
+const seed = 'some secret seed phrase i use'
+const encrypted = encryptSeed(seed, 'secure password')
+const decrypted = decryptSeed(encryptSeed, 'secure password')
+
+```
 ## Utils
 Utility functions designed to help 3rd party developers working with js binary types like Uint8Array and Buffer.
 #### split
