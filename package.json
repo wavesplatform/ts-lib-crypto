@@ -37,6 +37,7 @@
     "url": "https://github.com/wavesplatform/waves-crypto.git"
   },
   "dependencies": {
+    "js-sha3": "^0.8.0",
     "node-forge": "^0.8.5"
   },
   "devDependencies": {
