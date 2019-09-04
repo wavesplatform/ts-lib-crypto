@@ -4,6 +4,23 @@ import { base64Decode, base64Encode } from '../conversions/base-xx'
 import { stringToBytes, bytesToString } from '../conversions/string-bytes'
 import * as sha3 from 'js-sha3'
 
+// HACK. Monkey patch node-forge library to provide oids for missing hash algorithms
+pki.oids['sha224'] = '2.16.840.1.101.3.4.2.4'
+pki.oids['2.16.840.1.101.3.4.2.4'] = 'sha224'
+
+pki.oids['sha3-224'] = '2.16.840.1.101.3.4.2.7'
+pki.oids['2.16.840.1.101.3.4.2.7'] = 'sha3-224'
+
+pki.oids['sha3-256'] = '2.16.840.1.101.3.4.2.8'
+pki.oids['2.16.840.1.101.3.4.2.8'] = 'sha3-256'
+
+pki.oids['sha3-384'] = '2.16.840.1.101.3.4.2.9'
+pki.oids['2.16.840.1.101.3.4.2.9'] = 'sha3-384'
+
+pki.oids['sha3-512'] = '2.16.840.1.101.3.4.2.10'
+pki.oids['2.16.840.1.101.3.4.2.10'] = 'sha3-512'
+
+
 export const pemToBytes = (pem: string) => base64Decode(
   pem.trim()
     .split(/\r\n|\n/)
@@ -57,6 +74,7 @@ const digestCreatorPlaceHolder: any = (type: string) => () => {
 }
 
 class MessageDigestAdapter implements md.MessageDigest {
+  private algorithm = 'sha3-256' //fixMe: HACK to make forge work
   constructor(private sha3Digest: sha3.Hasher){}
 
   static makeCreator(sha3Hash: sha3.Hash): { create(): md.MessageDigest } {
