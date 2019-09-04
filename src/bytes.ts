@@ -22,6 +22,8 @@ export const {
   base58Decode,
   base16Encode,
   base16Decode,
+  stringToBytes,
+  bytesToString,
   random,
   randomSeed,
   randomBytes,
@@ -38,10 +40,9 @@ export const {
   rsaKeyPairSync,
   rsaSign,
   rsaVerify,
+  merkleVerify,
   split,
   concat,
-  stringToBytes,
-  bytesToString,
 } = crypto({ output: 'Bytes' })
 
 
