@@ -10,6 +10,7 @@ import { signBytes } from './sign'
 import { verifyAddress, verifyPublicKey, verifySignature } from './verification'
 import { rsaKeyPair, rsaKeyPairSync, rsaSign, rsaVerify } from './rsa'
 import { decryptSeed, encryptSeed } from './seed-ecryption'
+import { merkleVerify } from './merkle-verify'
 
 type TOutputTypesMap = {
   Bytes: Uint8Array
@@ -87,6 +88,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
     rsaKeyPairSync,
     rsaSign,
     rsaVerify,
+    merkleVerify,
     split,
     concat,
   }
