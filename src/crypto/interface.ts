@@ -156,4 +156,7 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
   rsaKeyPairSync: (bits?: number, e?: number) => TRSAKeyPair
   rsaSign: (rsaPrivateKey: TBytes, message: TBytes, digest?: RSADigestAlgorithm) => TBytes
   rsaVerify: (rsaPublicKey: TBytes, message: TBytes, signature: TBytes, digest?: RSADigestAlgorithm) => boolean
+
+  //Merkle
+  merkleVerify: (rootHash: Uint8Array, merkleProof: Uint8Array, leafData: Uint8Array) => boolean
 }
