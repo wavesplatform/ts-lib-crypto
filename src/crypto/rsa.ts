@@ -74,11 +74,10 @@ const digestCreatorPlaceHolder: any = (type: string) => () => {
 }
 
 class MessageDigestAdapter implements md.MessageDigest {
-  private algorithm = 'sha3-256' //fixMe: HACK to make forge work
-  constructor(private sha3Digest: sha3.Hasher){}
+  constructor(private sha3Digest: sha3.Hasher, private algorithm: string){}
 
-  static makeCreator(sha3Hash: sha3.Hash): { create(): md.MessageDigest } {
-    return {create: () => new MessageDigestAdapter(sha3Hash.create())}
+  static makeCreator(sha3Hash: sha3.Hash, algorithmName: string): { create(): md.MessageDigest } {
+    return {create: () => new MessageDigestAdapter(sha3Hash.create(), algorithmName)}
   }
 
   public update(msg: string, encoding?: 'raw' | 'utf8'): md.MessageDigest {
@@ -99,10 +98,10 @@ const digestMap: Record<RSADigestAlgorithm, { create(): md.MessageDigest }> = {
   'SHA256': md.sha256,
   'SHA384': md.sha384,
   'SHA512': md.sha512,
-  'SHA3-224': MessageDigestAdapter.makeCreator(sha3.sha3_224),
-  'SHA3-256': MessageDigestAdapter.makeCreator(sha3.sha3_256),
-  'SHA3-384': MessageDigestAdapter.makeCreator(sha3.sha3_384),
-  'SHA3-512': MessageDigestAdapter.makeCreator(sha3.sha3_512),
+  'SHA3-224': MessageDigestAdapter.makeCreator(sha3.sha3_224, 'sha3-224'),
+  'SHA3-256': MessageDigestAdapter.makeCreator(sha3.sha3_256, 'sha3-256'),
+  'SHA3-384': MessageDigestAdapter.makeCreator(sha3.sha3_384, 'sha3-384'),
+  'SHA3-512': MessageDigestAdapter.makeCreator(sha3.sha3_512, 'sha3-512'),
 }
 
 export const rsaSign = (rsaPrivateKey: TBytes, message: TBytes, digest: RSADigestAlgorithm = 'SHA256'): TBytes => {
