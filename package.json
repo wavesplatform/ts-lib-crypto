@@ -16,6 +16,9 @@
     "testEnvironment": "node"
   },
   "scripts": {
+    "preversion": "npm run build",
+    "postversion": "cd dist; npm publish",
+    "postpublish": "git push origin head",
     "build": "ts-node build/build.ts cp src/libs/*.d.ts dist/libs;cp src/libs/*.js dist/libs && npm run build-min",
     "build-min": "webpack --config webpack.config.js --env",
     "deploy": "cd dist; npm publish;",
