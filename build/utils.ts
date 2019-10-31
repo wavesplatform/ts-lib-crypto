@@ -2,7 +2,7 @@ import { mkdir, readdir, exists as ex, readFile, writeFile } from 'fs'
 import { exec } from 'child_process'
 import { resolve } from 'path'
 import { ncp } from 'ncp'
-import * as rimraf from 'rimraf'
+import rimraf from 'rimraf'
 
 export const p = (...path: string[]) => resolve(__dirname, ...path)
 

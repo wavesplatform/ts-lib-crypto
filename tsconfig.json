@@ -5,6 +5,7 @@
       "esnext",
       "dom"
     ],
+    "esModuleInterop": true,
     "downlevelIteration": true,
     "declaration": true,
     "sourceMap": true,
