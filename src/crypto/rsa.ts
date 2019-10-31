@@ -100,11 +100,11 @@ class MessageDigestAdapter implements md.MessageDigest {
 
 const digestMap: Record<RSADigestAlgorithm, { create(): md.MessageDigest }> = {
   'MD5': md5,
-  'SHA1': md.sha1,
+  'SHA1': md.algorithms.sha1,
   'SHA224': digestCreatorPlaceHolder('SHA224'),
-  'SHA256': md.sha256,
-  'SHA384': md.sha384,
-  'SHA512': md.sha512,
+  'SHA256': md.algorithms.sha256,
+  'SHA384': md.algorithms.sha384,
+  'SHA512': md.algorithms.sha512,
   'SHA3-224': MessageDigestAdapter.makeCreator(sha3.sha3_224, 'sha3-224'),
   'SHA3-256': MessageDigestAdapter.makeCreator(sha3.sha3_256, 'sha3-256'),
   'SHA3-384': MessageDigestAdapter.makeCreator(sha3.sha3_384, 'sha3-384'),

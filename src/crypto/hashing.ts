@@ -12,7 +12,7 @@ export const _hashChain = (input: TBinaryIn): TBytes =>
   _fromIn(keccak(blake2b(_fromIn(input))))
 
 export const sha256 = (input: TBinaryIn): TBytes => {
-  const md = forgeMd.sha256.create()
+  const md = forgeMd.algorithms.sha256.create()
   md.update(bytesToString(input, 'raw'))
   return stringToBytes(md.digest().getBytes(), 'raw')
 }
