@@ -1,6 +1,7 @@
 import { TBase64 } from './interface'
 import { bytesToString, stringToBytes } from '../conversions/string-bytes'
-import * as forge from 'node-forge'
+// @ts-ignore
+import * as forgeMd5 from 'node-forge/lib/md5'
 import { concat } from './concat-split'
 import { aesDecrypt, aesEncrypt } from './encryption'
 import { base16Encode, base64Decode, base64Encode } from '../conversions/base-xx'
@@ -21,7 +22,7 @@ function evpKdf(passphrase: Uint8Array, salt: Uint8Array, output = 48){
   let key = ''
   let final_key = key
   while (final_key.length < output){
-    key = forge.md.md5.create().update(key + passPlusSalt).digest().getBytes()
+    key = forgeMd5.create().update(key + passPlusSalt).digest().getBytes()
     final_key += key
   }
   return final_key

@@ -21,12 +21,12 @@ test('Should get correct rsa signature with async keypair generation', async () 
 })
 
 
-test('Should get correct rsa signature with async keypair generation', async () => {
+test('Should get correct rsa md5 signature with async keypair generation', async () => {
   const pair = await rsaKeyPair()
   const msg = 'hello world'
   const msgBytes = stringToBytes(msg)
-  const signature = rsaSign(pair.rsaPrivate, msgBytes)
-  const valid = rsaVerify(pair.rsaPublic, msgBytes, signature)
+  const signature = rsaSign(pair.rsaPrivate, msgBytes, 'MD5')
+  const valid = rsaVerify(pair.rsaPublic, msgBytes, signature, 'MD5')
   expect(valid).toBe(true)
 })
 

@@ -1,4 +1,7 @@
-import * as forge from 'node-forge'
+// @ts-ignore
+import * as forgeCipher from 'node-forge/lib/cipher'
+// @ts-ignore
+import * as util from 'node-forge/lib/util'
 import { TBinaryIn, TRawStringIn, TBytes, AESMode } from './interface'
 import { randomBytes } from './random'
 import { _fromRawIn, _fromIn } from '../conversions/param'
@@ -8,17 +11,17 @@ import axlsign from '../libs/axlsign'
 import { stringToBytes, bytesToString } from '../conversions/string-bytes'
 
 export const aesEncrypt = (data: TBinaryIn, key: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes => {
-  const cipher = forge.cipher.createCipher(`AES-${mode}` as any, bytesToString(_fromIn(key), 'raw'))
-  cipher.start({iv: iv && forge.util.createBuffer(bytesToString(_fromIn(iv), 'raw'))})
-  cipher.update(forge.util.createBuffer(bytesToString(data, 'raw')))
+  const cipher = forgeCipher.createCipher(`AES-${mode}` as any, bytesToString(_fromIn(key), 'raw'))
+  cipher.start({iv: iv && util.createBuffer(bytesToString(_fromIn(iv), 'raw'))})
+  cipher.update(util.createBuffer(bytesToString(data, 'raw')))
   cipher.finish()
   return stringToBytes(cipher.output.getBytes(), 'raw')
 }
 
 export const aesDecrypt = (encryptedData: TBinaryIn, key: TBinaryIn, mode: AESMode = 'CBC', iv?: TBinaryIn): TBytes => {
-  const decipher = forge.cipher.createDecipher(`AES-${mode}` as any, bytesToString(_fromIn(key), 'raw'))
-  decipher.start({iv: iv && forge.util.createBuffer(bytesToString(_fromIn(iv), 'raw'))})
-  const encbuf = forge.util.createBuffer(bytesToString(_fromIn(encryptedData), 'raw'))
+  const decipher = forgeCipher.createDecipher(`AES-${mode}` as any, bytesToString(_fromIn(key), 'raw'))
+  decipher.start({iv: iv && util.createBuffer(bytesToString(_fromIn(iv), 'raw'))})
+  const encbuf = util.createBuffer(bytesToString(_fromIn(encryptedData), 'raw'))
   decipher.update(encbuf)
   if (!decipher.finish()) {
     throw new Error('Failed to decrypt data with provided key')

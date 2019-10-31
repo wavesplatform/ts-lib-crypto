@@ -1,4 +1,11 @@
-import { pki, md, util } from 'node-forge'
+// @ts-ignore
+import * as pki from 'node-forge/lib/pki'
+// @ts-ignore
+import * as md from 'node-forge/lib/md'
+// @ts-ignore
+import * as md5 from 'node-forge/lib/md5'
+// @ts-ignore
+import * as util from 'node-forge/lib/util'
 import { RSADigestAlgorithm, TBytes, TRSAKeyPair } from './interface'
 import { base64Decode, base64Encode } from '../conversions/base-xx'
 import { stringToBytes, bytesToString } from '../conversions/string-bytes'
@@ -92,7 +99,7 @@ class MessageDigestAdapter implements md.MessageDigest {
 }
 
 const digestMap: Record<RSADigestAlgorithm, { create(): md.MessageDigest }> = {
-  'MD5': md.md5,
+  'MD5': md5,
   'SHA1': md.sha1,
   'SHA224': digestCreatorPlaceHolder('SHA224'),
   'SHA256': md.sha256,
