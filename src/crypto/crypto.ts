@@ -5,7 +5,7 @@ import { base58Encode, base64Decode, base64Encode, base16Decode, base16Encode, b
 import { bytesToString, stringToBytes } from '../conversions/string-bytes'
 import { concat, split } from './concat-split'
 import { _hashChain, sha256, keccak, blake2b } from './hashing'
-import { privateKey, address, publicKey, keyPair, seedWithNonce } from './address-keys-seed'
+import { privateKey, address, publicKey, keyPair, seedWithNonce, buildAddress } from './address-keys-seed'
 import { signBytes } from './sign'
 import { verifyAddress, verifyPublicKey, verifySignature } from './verification'
 import { rsaKeyPair, rsaKeyPairSync, rsaSign, rsaVerify } from './rsa'
@@ -61,6 +61,7 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
   return {
     ...seedPart,
     sharedKey: toOut(sharedKey),
+    buildAddress,
     blake2b,
     keccak,
     sha256,

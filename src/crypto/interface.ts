@@ -125,6 +125,7 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
   bytesToString: (input: TBinaryIn, encoding?: 'utf8' | 'raw') => string
   split: (binary: TBinaryIn, ...sizes: number[]) => TBytes[]
   concat: (...binaries: TBinaryIn[]) => TBytes
+  buildAddress: (publicKeyBytes: TBytes, chainId: TChainId) => TBytes
 
   //Random
   random<T extends keyof TRandomTypesMap>(count: number, type: T): TRandomTypesMap[T]

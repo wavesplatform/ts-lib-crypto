@@ -8,7 +8,7 @@ import axlsign from '../libs/axlsign'
 
 export const seedWithNonce = (seed: TSeed, nonce: number): INonceSeed => ({ seed: Seed.toBinary(seed).seed, nonce })
 
-const buildAddress = (publicKeyBytes: TBytes, chainId: TChainId = MAIN_NET_CHAIN_ID): TBytes => {
+export const buildAddress = (publicKeyBytes: TBytes, chainId: TChainId = MAIN_NET_CHAIN_ID): TBytes => {
   const prefix = [1, typeof chainId === 'string' ? chainId.charCodeAt(0) : chainId]
   const publicKeyHashPart = _hashChain(publicKeyBytes).slice(0, 20)
   const rawAddress = concat(prefix, publicKeyHashPart)

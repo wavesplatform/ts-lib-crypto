@@ -12,6 +12,7 @@ export const {
   publicKey,
   privateKey,
   address,
+  buildAddress,
   blake2b,
   keccak,
   sha256,

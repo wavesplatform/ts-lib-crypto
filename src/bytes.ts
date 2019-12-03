@@ -8,6 +8,7 @@ export * from './crypto/interface'
 export const {
   signBytes,
   keyPair,
+  buildAddress,
   publicKey,
   privateKey,
   address,
