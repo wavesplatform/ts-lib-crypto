@@ -5,6 +5,7 @@ import { keccak256 } from '../libs/sha3'
 import * as forgeHmac from 'node-forge/lib/hmac'
 // @ts-ignore
 import * as forgeMd from 'node-forge/lib/md'
+import 'node-forge/lib/sha256'
 import * as blake from '../libs/blake2b'
 import { stringToBytes, bytesToString } from '../conversions/string-bytes'
 
