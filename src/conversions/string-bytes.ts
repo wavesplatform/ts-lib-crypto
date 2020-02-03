@@ -34,4 +34,6 @@ export const binaryStringToBytes = (str: string): TBytes =>
  * Reads each byte as individual character
  */
 export const bytesToBinaryString = (bytes: TBinaryIn): string =>
-  String.fromCharCode.apply(null, Array.from(_fromIn(bytes)))
+  Array.from(_fromIn(bytes))
+      .map((byte) => String.fromCharCode(byte))
+      .join('')
