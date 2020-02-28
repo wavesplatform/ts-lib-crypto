@@ -16,7 +16,9 @@ export const bytesToString = (bytes: TBinaryIn, encoding: 'utf8' | 'raw' = 'utf8
   if (encoding === 'utf8'){
     return utf8ArrayToStr(Array.from(_fromIn(bytes)))
   } else if (encoding === 'raw'){
-    return String.fromCharCode.apply(null, Array.from(_fromIn(bytes)))
+    return Array.from(_fromIn(bytes))
+      .map((byte) => String.fromCharCode(byte))
+      .join('')
   }else {
     throw new Error(`Unsupported encoding ${encoding}`)
   }
@@ -32,4 +34,6 @@ export const binaryStringToBytes = (str: string): TBytes =>
  * Reads each byte as individual character
  */
 export const bytesToBinaryString = (bytes: TBinaryIn): string =>
-  String.fromCharCode.apply(null, Array.from(_fromIn(bytes)))
+  Array.from(_fromIn(bytes))
+      .map((byte) => String.fromCharCode(byte))
+      .join('')
