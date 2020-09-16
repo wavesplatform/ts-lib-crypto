@@ -40,7 +40,7 @@
   },
   "dependencies": {
     "js-sha3": "^0.8.0",
-    "node-forge": "^0.8.5"
+    "node-forge": "^0.10.0"
   },
   "devDependencies": {
     "@types/jest": "^24.0.13",
