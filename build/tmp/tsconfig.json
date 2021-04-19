@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "lib": [
+      "esnext",
+      "dom"
+    ],
+    "esModuleInterop": true,
+    "downlevelIteration": true,
+    "declaration": true,
+    "sourceMap": true,
+    //"allowJs": true,
+    "module": "commonjs",
+    "outDir": "dist",
+    "strict": true
+  },
+  "include": [
+    "./src/**/*"
+    //"./declarations/**/*"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "test"
+  ]
+}
