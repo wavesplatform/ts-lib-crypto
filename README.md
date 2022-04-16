@@ -359,7 +359,7 @@ Encrypt bytes using AES algorithm.
 ```typescript
 import { aesEncrypt, randomBytes } from '@waves/ts-lib-crypto'
 
-const data = Uint8Arraty.from([1,2,3])
+const data = Uint8Array.from([1,2,3])
 const mode =  'CBC' // Possible modes are 'CBC' | 'CFB' | 'CTR' | 'OFB' | 'ECB' | 'GCM'
 
 const key = randomBytes(32)
