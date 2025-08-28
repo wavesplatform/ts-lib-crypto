@@ -5,7 +5,9 @@ module.exports = {
     ],
     testRegex: '(/__tests__/.*|(\\.|/)(test))\\.tsx?$',
     transform: {
-        "^.+\\.(ts|tsx)?$": "ts-jest"
+        "^.+\\.(ts|tsx)?$": ["ts-jest", {
+            diagnostics: false,
+        }]
     },
     collectCoverage: true,
     coverageReporters: [
@@ -13,11 +15,6 @@ module.exports = {
         "text",
         "lcov"
     ],
-    globals: {
-        'ts-jest': {
-            diagnostics: false,
-        },
-    },
     preset: 'ts-jest',
     testMatch: null,
     testEnvironment: 'node',

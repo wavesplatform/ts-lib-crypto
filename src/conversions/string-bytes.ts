@@ -14,7 +14,7 @@ export const stringToBytes = (str: string, encoding: 'utf8' | 'raw' = 'utf8'): T
 
 export const bytesToString = (bytes: TBinaryIn, encoding: 'utf8' | 'raw' = 'utf8'): string => {
   if (encoding === 'utf8'){
-    return utf8ArrayToStr(Array.from(_fromIn(bytes)))
+    return utf8ArrayToStr(_fromIn(bytes))
   } else if (encoding === 'raw'){
     return Array.from(_fromIn(bytes))
       .map((byte) => String.fromCharCode(byte))
