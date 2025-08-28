@@ -8,7 +8,9 @@ permissions:
 
 jobs:
   publish-snapshots:
-    environment: prod
+    environment:
+      name: prod
+      url: ${{ steps.publish.outputs.url }}
     name: Publish snapshot packages
     runs-on: ubuntu-latest
     env:
@@ -19,13 +21,16 @@ jobs:
         with:
           registry-url: 'https://registry.npmjs.org'
       - run: |
-          version=$(jq -r .version package.json)-snapshot$PR_NUMBER.$RUN_NUMBER.$RUN_ATTEMPT
           npm i
+          npm test
+      - id: publish
+        run: |
+          version=$(jq -r .version package.json)-snapshot$PR_NUMBER.$RUN_NUMBER.$RUN_ATTEMPT
           npm version $version --no-git-tag-version
           npm run build
           cd dist
           npm publish --provenance --access public --tag snapshot
-          npm dist-tag add @waves/ts-lib-crypto@1.4.3 latest
+          echo "url=https://www.npmjs.com/package/@waves/ts-lib-crypto/v/$version" >> "$GITHUB_OUTPUT"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
           RUN_NUMBER: ${{ github.run_number }}
