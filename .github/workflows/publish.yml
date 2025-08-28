@@ -1,0 +1,32 @@
+name: Publish snapshot package
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish-snapshots:
+    environment: prod
+    name: Publish snapshot packages
+    runs-on: ubuntu-latest
+    env:
+      PR_NUMBER: ${{ github.event.number }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          registry-url: 'https://registry.npmjs.org'
+      - run: |
+          version=$(jq -r .version package.json)-snapshot$PR_NUMBER.$RUN_NUMBER.$RUN_ATTEMPT
+          npm i
+          npm version $version --no-git-tag-version
+          npm run build
+          cd dist
+          npm publish --provenance --access public --tag snapshot
+          npm dist-tag add @waves/ts-lib-crypto@1.4.3 latest
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
+          RUN_NUMBER: ${{ github.run_number }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}

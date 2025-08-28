@@ -1,6 +1,6 @@
 {
   "name": "@waves/ts-lib-crypto",
-  "version": "1.4.3-snapshot",
+  "version": "1.4.4",
   "description": "This library contains all algorithm implementations like signature verification and protocol entries like address used in Waves.",
   "keywords": [
     "waves",
@@ -13,7 +13,6 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "postversion": "npm run build; cd dist; npm publish",
     "postpublish": "git push origin head",
     "build": "ts-node build/build.ts cp src/libs/*.d.ts dist/libs;cp src/libs/*.js dist/libs && npm run build-min",
     "build-min": "webpack --config webpack.config.js",
@@ -33,7 +32,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/wavesplatform/waves-crypto.git"
+    "url": "https://github.com/wavesplatform/ts-lib-crypto.git"
   },
   "dependencies": {
     "js-sha3": "^0.9.3",
