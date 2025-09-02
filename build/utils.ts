@@ -2,12 +2,12 @@ import { mkdir, readdir, exists as ex, readFile, writeFile } from 'fs'
 import { exec } from 'child_process'
 import { resolve } from 'path'
 import { ncp } from 'ncp'
-import rimraf from 'rimraf'
+import { rimraf } from 'rimraf'
 
 export const p = (...path: string[]) => resolve(__dirname, ...path)
 
 export const remove = (path: string): Promise<void> =>
-  new Promise((resolve, reject) => rimraf(path, (err: any) => err ? reject(err) : resolve()))
+  new Promise((resolve, reject) => rimraf(path).then(() => resolve()).catch(err => reject(err)))
 
 export const copy = (src: string, dst: string): Promise<void> =>
   new Promise((resolve, reject) => ncp(src, dst, (err: any) => err ? reject(err) : resolve()))

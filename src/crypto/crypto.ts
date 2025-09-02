@@ -37,7 +37,11 @@ export const crypto = <TOut extends TOutput = TDefaultOut, S extends TSeed | und
 
   const toOut = <F extends Function>(f: F) => (...args: ArgsAll<F>): TOutputTypesMap[TOut] => {
     const r = f(...args)
-    return (!options || options && options.output === 'Base58') ? base58Encode(r) : r
+    if (!options || options.output === 'Base58') {
+      return base58Encode(r) as TOutputTypesMap[TOut]
+    } else {
+      return r as TOutputTypesMap[TOut]
+    }
   }
 
   const toOutKey = <F extends Function>(f: F) => (...args: ArgsAll<F>): TKeyPair<TOutputTypesMap[TOut]> => {
