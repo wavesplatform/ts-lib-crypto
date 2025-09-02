@@ -23,25 +23,24 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - run: npm i
       - if: ${{ github.event_name == 'pull_request' }}
         run: |
-          echo "VERSION=$(awk -F '[".]' '{print $3"."$4"."$5+1}' version.sbt)-$PR_NUMBER-snapshot.$RUN_NUMBER.$RUN_ATTEMPT" >> $GITHUB_ENV
+          npm version prerelease --preid=$PR_NUMBER-snapshot.$RUN_NUMBER.$RUN_ATTEMPT --no-git-tag-version
           echo "TAG=snapshot" >> $GITHUB_ENV
       - if: ${{ github.event_name == 'release' }}
         run: |
           VERSION=$(echo ${{ github.release.tag_name }} | sed 's/^v//')
-          echo "VERSION=$VERSION >> $GITHUB_ENV
+          npm version $VERSION --no-git-tag-version
           echo "TAG=latest" >> $GITHUB_ENV
       - if: ${{ github.event_name == 'push' }}
         run: |
-          echo "VERSION=$(awk -F '[".]' '{print $3"."$4"."$5+1}' version.sbt)-snapshot.$RUN_NUMBER.$RUN_ATTEMPT" >> $GITHUB_ENV
+          npm version prerelease --preid=snapshot.$RUN_NUMBER.$RUN_ATTEMPT --no-git-tag-version
           echo "TAG=snapshot" >> $GITHUB_ENV
       - uses: actions/setup-node@v4
         with:
           registry-url: 'https://registry.npmjs.org'
-      - run: |
-          npm i
-          npm test
+      - run: npm test
       - id: publish
         run: |
           npm version $VERSION --no-git-tag-version
