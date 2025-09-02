@@ -1,11 +1,14 @@
 name: Publish snapshot package
 on:
   pull_request:
+  push:
+    branches: [ 'master' ]
+  release:
+    types: [ published ]
 
 permissions:
   contents: read
   id-token: write
-
 jobs:
   publish-snapshots:
     environment:
@@ -15,8 +18,24 @@ jobs:
     runs-on: ubuntu-latest
     env:
       PR_NUMBER: ${{ github.event.number }}
+      RUN_NUMBER: ${{ github.run_number }}
+      RUN_ATTEMPT: ${{ github.run_attempt }}
+
     steps:
       - uses: actions/checkout@v4
+      - if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo "VERSION=$(awk -F '[".]' '{print $3"."$4"."$5+1}' version.sbt)-$PR_NUMBER-snapshot.$RUN_NUMBER.$RUN_ATTEMPT" >> $GITHUB_ENV
+          echo "TAG=snapshot" >> $GITHUB_ENV
+      - if: ${{ github.event_name == 'release' }}
+        run: |
+          VERSION=$(echo ${{ github.release.tag_name }} | sed 's/^v//')
+          echo "VERSION=$VERSION >> $GITHUB_ENV
+          echo "TAG=latest" >> $GITHUB_ENV
+      - if: ${{ github.event_name == 'push' }}
+        run: |
+          echo "VERSION=$(awk -F '[".]' '{print $3"."$4"."$5+1}' version.sbt)-snapshot.$RUN_NUMBER.$RUN_ATTEMPT" >> $GITHUB_ENV
+          echo "TAG=snapshot" >> $GITHUB_ENV
       - uses: actions/setup-node@v4
         with:
           registry-url: 'https://registry.npmjs.org'
@@ -25,13 +44,10 @@ jobs:
           npm test
       - id: publish
         run: |
-          version=$(jq -r .version package.json)-snapshot$PR_NUMBER.$RUN_NUMBER.$RUN_ATTEMPT
-          npm version $version --no-git-tag-version
+          npm version $VERSION --no-git-tag-version
           npm run build
           cd dist
-          npm publish --provenance --access public --tag snapshot
-          echo "url=https://www.npmjs.com/package/@waves/ts-lib-crypto/v/$version" >> "$GITHUB_OUTPUT"
+          npm publish --provenance --access public --tag $TAG
+          echo "url=https://www.npmjs.com/package/@waves/ts-lib-crypto/v/$VERSION" >> "$GITHUB_OUTPUT"
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
-          RUN_NUMBER: ${{ github.run_number }}
-          RUN_ATTEMPT: ${{ github.run_attempt }}

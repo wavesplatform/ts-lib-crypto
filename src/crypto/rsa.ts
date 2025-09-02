@@ -2,6 +2,7 @@ import * as forge from 'node-forge'
 import { RSADigestAlgorithm, TBytes, TRSAKeyPair } from './interface'
 import { base64Decode, base64Encode } from '../conversions/base-xx'
 import * as sha3 from 'js-sha3'
+import { sha224 } from 'js-sha256'
 
 export const pemToBytes = (pem: string) => base64Decode(
   pem.trim()
@@ -71,7 +72,7 @@ const DIGEST_INFOS: Record<RSADigestAlgorithm, DigestInfo> = {
   SHA224: {
     oid: '2.16.840.1.101.3.4.2.4',
     prefix: '303d300d06096086480165030402040500041c',
-    hash: (bytes) => { throw new Error('SHA224 is not supported')},
+    hash: (bytes) => { forge.util.hexToBytes(sha224(bytes)) },
   },
   SHA256: {
     oid: '2.16.840.1.101.3.4.2.1',

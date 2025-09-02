@@ -1,6 +1,6 @@
 {
   "name": "@waves/ts-lib-crypto",
-  "version": "1.4.4",
+  "version": "1.4.3",
   "description": "This library contains all algorithm implementations like signature verification and protocol entries like address used in Waves.",
   "keywords": [
     "waves",
@@ -35,6 +35,7 @@
     "url": "https://github.com/wavesplatform/ts-lib-crypto.git"
   },
   "dependencies": {
+    "js-sha256": "^0.11.1",
     "js-sha3": "^0.9.3",
     "node-forge": "^1.3.1"
   },
