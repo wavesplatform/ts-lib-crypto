@@ -72,7 +72,7 @@ const DIGEST_INFOS: Record<RSADigestAlgorithm, DigestInfo> = {
   SHA224: {
     oid: '2.16.840.1.101.3.4.2.4',
     prefix: '303d300d06096086480165030402040500041c',
-    hash: (bytes) => { forge.util.hexToBytes(sha224(bytes)) },
+    hash: (bytes) => forge.util.hexToBytes(sha224(bytes)),
   },
   SHA256: {
     oid: '2.16.840.1.101.3.4.2.1',
