@@ -20,6 +20,7 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           registry-url: 'https://registry.npmjs.org'
+          node-version: '>=24.7.0' # Trusted publishing requires npm CLI version 11.5.1 or later.
       - run: npm i
       - if: ${{ github.event_name == 'push' }}
         run: |
@@ -41,5 +42,3 @@ jobs:
           cd dist
           npm publish --provenance --access public --tag $TAG
           echo "url=https://www.npmjs.com/package/@waves/ts-lib-crypto/v/$(jq --raw-output .version package.json)" >> "$GITHUB_OUTPUT"
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPMJS_TOKEN }}
