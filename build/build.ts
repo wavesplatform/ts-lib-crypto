@@ -1,4 +1,7 @@
 import { remove, p, run, files, copy, create, npmGetVersion, copyJson, versionToString } from './utils'
+import { glob } from 'glob';
+import * as path from 'path';
+import { promises as fs } from 'fs';
 
 async function build() {
   try {
@@ -28,7 +31,12 @@ async function build() {
 
     //await copy(p('tmp/docs'), p('../docs'))
     await copy(p('tmp/dist'), p('../dist'))
-    await run(p('cp src/libs/*.d.ts dist/libs;cp src/libs/*.js dist/libs'))
+    // await run(p('cp src/libs/*.d.ts dist/libs;cp src/libs/*.js dist/libs'))
+    const files = await glob('src/libs/*.{d.ts,js}');
+    await Promise.all(files.map(async (file) => {
+      const dest = path.join('dist/libs', path.basename(file));
+      await fs.copyFile(file, dest);
+    }));
     await remove(p('tmp'))
 
     // const ver = await npmGetVersion('@waves/ts-lib-crypto')
