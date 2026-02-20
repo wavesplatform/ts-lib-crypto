@@ -74,6 +74,11 @@ export type TRSAKeyPair = {
   rsaPrivate: TBytes
 }
 
+export type TBLSKeyPair = {
+  blsSecret: TBytes,
+  blsPublic: TBytes
+}
+
 /* Consider that every method should handle TSeed
    seamlessly so in case of absence of type union operator
    overloads should be implemented for each possible TSeed type */
@@ -160,4 +165,10 @@ export interface IWavesCrypto<TDesiredOut extends TBinaryOut = TBase58> {
 
   //Merkle
   merkleVerify: (rootHash: Uint8Array, merkleProof: Uint8Array, leafData: Uint8Array) => boolean
+
+  //BLS
+  blsKeyPair: (seed: TBinaryIn) => TBLSKeyPair
+  blsPublicKey: (privateKey: TBinaryIn) => TBytes
+  blsSign: (privateKey: TBinaryIn, message: TBinaryIn) => TBytes
+  blsVerify: (publicKey: TBinaryIn, message: TBinaryIn, signature: TBinaryIn) => boolean
 }
