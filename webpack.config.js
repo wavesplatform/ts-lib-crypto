@@ -13,18 +13,15 @@ module.exports = {
     ],
   },
   resolve: {
-    alias: {
-      '@noble/curves/bls12-381': '@noble/curves/bls12-381.js',
-      '@noble/hashes/hkdf': '@noble/hashes/hkdf.js',
-      '@noble/hashes/sha2': '@noble/hashes/sha2.js',
-      '@noble/curves/utils': '@noble/curves/utils.js',
-    },
     extensions: ['.tsx', '.ts', '.js'],
   },
   output: {
     path: path.resolve(__dirname, 'dist/min'),
-    library: 'WavesCrypto',
-    libraryTarget: 'umd',
+    library: {
+      name: 'WavesCrypto',
+      type: 'umd',
+    },
+    globalObject: 'this',
     filename: 'waves-lib-crypto.js',
   },
 }

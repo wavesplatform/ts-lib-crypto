@@ -1,6 +1,6 @@
 {
   "name": "@waves/ts-lib-crypto",
-  "version": "1.5.0",
+  "version": "1.5.1.snapshot.2",
   "description": "This library contains all algorithm implementations like signature verification and protocol entries like address used in Waves.",
   "keywords": [
     "waves",
@@ -10,17 +10,19 @@
     "cryptography",
     "signature"
   ],
-  "main": "dist/index.js",
+  "main": "dist/cjs/index.cjs",
   "types": "dist/index.d.ts",
   "scripts": {
     "postpublish": "git push origin head",
-    "build": "ts-node build/build.ts cp src/libs/*.d.ts dist/libs;cp src/libs/*.js dist/libs && npm run build-min",
+    "build": "ts-node build/build.ts cp src/libs/*.d.ts dist/libs;cp src/libs/*.js dist/libs && npm run build:cjs && npm run build:esm && npm run build-min",
     "build-min": "webpack --config webpack.config.js --mode=production",
     "deploy": "cd dist; npm publish;",
     "deploy-beta": "cd dist; npm publish -tag beta;",
     "fix-style": "eslint --fix .",
     "test": "vitest run",
-    "test:debug": "node --inspect node_modules/.bin/jest --runInBand"
+    "test:debug": "node --inspect node_modules/.bin/jest --runInBand",
+    "build:cjs": "webpack --config webpack.cjs.config.js --mode=production",
+    "build:esm": "webpack --config webpack.esm.config.js --mode=production"
   },
   "author": "Yuriy Naydenov",
   "contributors": [
@@ -56,5 +58,21 @@
     "typescript": "^5.9.2",
     "webpack": "^5.105.2",
     "webpack-cli": "^6.0.1"
+  },
+  "module": "dist/esm/index.mjs",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/esm/index.mjs",
+      "require": "./dist/cjs/index.cjs",
+      "default": "./dist/cjs/index.cjs"
+    },
+    "./*": {
+      "types": "./dist/*.d.ts",
+      "import": "./dist/*.js",
+      "require": "./dist/*.js",
+      "default": "./dist/*.js"
+    },
+    "./package.json": "./package.json"
   }
 }

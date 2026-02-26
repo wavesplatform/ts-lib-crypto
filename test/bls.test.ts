@@ -1,4 +1,4 @@
-import {crypto} from '../src/crypto/crypto'
+import {crypto} from '../src'
 import {base58Decode, base58Encode} from '../src/conversions/base-xx'
 import {describe, expect, it} from 'vitest'
 

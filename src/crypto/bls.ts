@@ -1,8 +1,7 @@
-// bls.ts
-import {bls12_381} from '@noble/curves/bls12-381'
-import {hkdf} from '@noble/hashes/hkdf'
-import {sha256} from '@noble/hashes/sha2'
-import {bytesToNumberBE} from '@noble/curves/utils'
+import {bls12_381} from '@noble/curves/bls12-381.js'
+import {hkdf} from '@noble/hashes/hkdf.js'
+import {sha256} from '@noble/hashes/sha2.js'
+import {bytesToNumberBE} from '@noble/curves/utils.js'
 import {TBinaryIn, TBLSKeyPair, TBytes} from './interface'
 import {_fromIn} from '../conversions/param'
 
