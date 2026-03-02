@@ -43,8 +43,24 @@ async function build() {
     // ver.patch++
     await copy(p('../README.md'), p('../dist/README.md'))
     await copyJson(p('../package.json'), p('../dist/package.json'), {
-      main: 'index.js',
+      main: 'cjs/index.cjs',
+      module: 'esm/index.mjs',
       types: 'index.d.ts',
+      exports: {
+        '.': {
+          types: './index.d.ts',
+          import: './esm/index.mjs',
+          require: './cjs/index.cjs',
+          default: './cjs/index.cjs',
+        },
+        './*': {
+          types: './*.d.ts',
+          import: './*.js',
+          require: './*.js',
+          default: './*.js',
+        },
+        './package.json': './package.json',
+      },
       // version: versionToString(ver),
       jest: undefined,
       scripts: undefined,

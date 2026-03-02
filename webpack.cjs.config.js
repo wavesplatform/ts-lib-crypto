@@ -1,7 +1,8 @@
-// webpack.config.js
 const path = require('path')
 
 module.exports = {
+  mode: 'production',
+  target: 'node',
   entry: './src/index.ts',
   module: {
     rules: [
@@ -16,12 +17,10 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.js'],
   },
   output: {
-    path: path.resolve(__dirname, 'dist/min'),
+    path: path.resolve(__dirname, 'dist/cjs'),
+    filename: 'index.cjs',
     library: {
-      name: 'WavesCrypto',
-      type: 'umd',
+      type: 'commonjs2',
     },
-    globalObject: 'this',
-    filename: 'waves-lib-crypto.js',
   },
 }
