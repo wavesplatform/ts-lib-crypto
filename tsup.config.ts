@@ -9,6 +9,7 @@ export default defineConfig([
     sourcemap: true,
     dts: false,
     clean: false,
+    noExternal: ['@noble/curves', '@noble/hashes'],
   },
   {
     entry: ['src/index.ts'],
@@ -18,5 +19,6 @@ export default defineConfig([
     sourcemap: true,
     dts: false,
     clean: false,
+    noExternal: ['@noble/curves', '@noble/hashes'],
   },
 ])
