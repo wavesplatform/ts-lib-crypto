@@ -1,10 +1,9 @@
-// @ts-ignore
-import forgeRand from 'node-forge/lib/random'
+import forge from 'node-forge'
 import { TBytes, TRandomTypesMap } from './interface'
 import { seedWordsList } from './seed-words-list'
 import { stringToBytes } from '../conversions/string-bytes'
 
-const _random = (count: number) => stringToBytes(forgeRand.getBytesSync(count), 'raw')
+const _random = (count: number) => stringToBytes(forge.random.getBytesSync(count), 'raw')
 
 const ensureBuffer = () => {
   try { const b = new Buffer(1) } catch (e) {
