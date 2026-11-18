@@ -22,7 +22,8 @@
     "prepublishOnly": "npm run build",
     "fix-style": "eslint --fix .",
     "test": "vitest run",
-    "test:debug": "node --inspect node_modules/.bin/jest --runInBand"
+    "test:debug": "node --inspect node_modules/.bin/jest --runInBand",
+    "postbuild": "node build/check-dist.mjs"
   },
   "author": "Yuriy Naydenov",
   "contributors": [

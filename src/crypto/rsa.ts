@@ -1,4 +1,4 @@
-import * as forge from 'node-forge'
+import forge from 'node-forge'
 import { RSADigestAlgorithm, TBytes, TRSAKeyPair } from './interface'
 import { base64Decode, base64Encode } from '../conversions/base-xx'
 import * as sha3 from 'js-sha3'

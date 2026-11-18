@@ -1,9 +1,10 @@
-//@ts-ignore
-import { encode64, decode64, hexToBytes, bytesToHex } from 'node-forge/lib/util'
+import forge from 'node-forge'
 import { TBase64, TBytes, TBinaryIn, TBase58, TBase16 } from '../crypto/interface'
 import base58 from '../libs/base58'
 import { _fromIn } from './param'
 import { bytesToString, stringToBytes } from './string-bytes'
+
+const { encode64, decode64, hexToBytes, bytesToHex } = forge.util
 
 export const base64Decode = (input: TBase64): TBytes =>
   stringToBytes(decode64(input), 'raw')
